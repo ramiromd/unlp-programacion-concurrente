@@ -26,11 +26,12 @@
     - [Sintáxis y semántica](#sintáxis-y-semántica)
       - [Para secciones críticas](#para-secciones-críticas-1)
       - [Para Barriers](#para-barriers)
-    - [Técnicas](#técnicas)
-      - [Splitted Binary Semaphore (SBS)](#splitted-binary-semaphore-sbs)
-      - [Contadores de recursos](#contadores-de-recursos)
-      - [Exlusión mutua selectiva](#exlusión-mutua-selectiva)
-      - [Passing the batton](#passing-the-batton)
+    - [Problemas y Técnicas](#problemas-y-técnicas)
+      - [Productores y consumidores: Split Binary Semaphore (SBS)](#productores-y-consumidores-split-binary-semaphore-sbs)
+      - [Búffers limitados: Contadores de recursos](#búffers-limitados-contadores-de-recursos)
+      - [Dining Philosophers y lectores/escritores: Exlusión mutua selectiva](#dining-philosophers-y-lectoresescritores-exlusión-mutua-selectiva)
+      - [Lectores y escritores: Exclusión mutua selectiva](#lectores-y-escritores-exclusión-mutua-selectiva)
+      - [Lectores y escritores: Passing the batton](#lectores-y-escritores-passing-the-batton)
   - [Apéndice](#apéndice)
     - [Instrucciones máquina](#instrucciones-máquina)
       - [Fetch and Add (FA)](#fetch-and-add-fa)
@@ -115,13 +116,13 @@ Process CS[i = 1 to n]
 end;
 ```
 
-|| Propiedad | Observación |
-|:-:|:-------:|:---------:|
-|:white_check_mark:| **Exclusión mutua** | - |
-|:white_check_mark:| **Ausencia de deadlock** | - |
-|:white_check_mark:| **Ausencia de demoras innecesarias** | - |
-|:x:| **Eventual entrada** | Solo con **schedulers fuertemente fairs**, ya que `lock` se vuelve verdadera con infinita frecuencia. |
-|:x:| Prioridades | No controla el orden en que los procesos demorados, entran a su SC. |
+|                    |              Propiedad               |                                              Observación                                              |
+| :----------------: | :----------------------------------: | :---------------------------------------------------------------------------------------------------: |
+| :white_check_mark: |         **Exclusión mutua**          |                                                   -                                                   |
+| :white_check_mark: |       **Ausencia de deadlock**       |                                                   -                                                   |
+| :white_check_mark: | **Ausencia de demoras innecesarias** |                                                   -                                                   |
+|        :x:         |         **Eventual entrada**         | Solo con **schedulers fuertemente fairs**, ya que `lock` se vuelve verdadera con infinita frecuencia. |
+|        :x:         |             Prioridades              |                  No controla el orden en que los procesos demorados, entran a su SC.                  |
 
 #### Soluciones Fair
 
@@ -158,11 +159,11 @@ end;
 ```
 
 
-|| Característica |
-|:-:|:-------:|
-|:white_check_mark:| No requiere instrucciones especiales. |
-|:white_check_mark:| Prioriza al primero en iniciar el protocolo de entrada. |
-|:x:| Dificil generalizarlo a _n_ procesos. |
+|                    |                     Característica                      |
+| :----------------: | :-----------------------------------------------------: |
+| :white_check_mark: |          No requiere instrucciones especiales.          |
+| :white_check_mark: | Prioriza al primero en iniciar el protocolo de entrada. |
+|        :x:         |          Dificil generalizarlo a _n_ procesos.          |
 
 
 ##### Ticket
@@ -198,11 +199,11 @@ end;
 
 ```
 
-|| Característica |
-|:-:|:-------:|
-|:white_check_mark:| Sencillo y general a _n_ procesos. |
-|:x:| Requiere instrucciones especiales |
-|:x:| La implementación sin FA, u otra, puede entregar números repetidos. Decrementando el grado de justicia del algoritmo. |
+|                    |                                                    Característica                                                     |
+| :----------------: | :-------------------------------------------------------------------------------------------------------------------: |
+| :white_check_mark: |                                          Sencillo y general a _n_ procesos.                                           |
+|        :x:         |                                           Requiere instrucciones especiales                                           |
+|        :x:         | La implementación sin FA, u otra, puede entregar números repetidos. Decrementando el grado de justicia del algoritmo. |
 
 #### Bakery
 
@@ -229,10 +230,10 @@ Process SC [i = 1 .. n]
 end;
 ```
 
-|| Característica |
-|:-:|:-------:|
-|:white_check_mark:| No requiere instrucciones especiales. |
-|:x:| Calcular el máximo entre _n_ valores |
+|                    |            Característica             |
+| :----------------: | :-----------------------------------: |
+| :white_check_mark: | No requiere instrucciones especiales. |
+|        :x:         | Calcular el máximo entre _n_ valores  |
 
 ### Para Barreras
 
@@ -254,12 +255,12 @@ Process Worker[i = 1 .. n]
 end;
 ```
 
-|| Característica | Observación |
-|:-:|:-------:|:-----:|
-|:x:| Poco adecuado | `count` debe ser reiniciada cuando todos crucen la barrera y, por sobre todo, antes de que cualquier proceso intente incrementarla. |
-|:x:| Requiere instrucciones especiales | - |
-|:x:| Requiere administración eficiente de caché | `count` es referenciada varias veces. Esto puede provocar **_memory contention_**. |
-|:white_check_mark:| Útil con un _n_ pequeño | - |
+|                    |               Característica               |                                                             Observación                                                             |
+| :----------------: | :----------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------------: |
+|        :x:         |               Poco adecuado                | `count` debe ser reiniciada cuando todos crucen la barrera y, por sobre todo, antes de que cualquier proceso intente incrementarla. |
+|        :x:         |     Requiere instrucciones especiales      |                                                                  -                                                                  |
+|        :x:         | Requiere administración eficiente de caché |                         `count` es referenciada varias veces. Esto puede provocar **_memory contention_**.                          |
+| :white_check_mark: |          Útil con un _n_ pequeño           |                                                                  -                                                                  |
 
 :bulb: Simple y razonable cuando exista un _n_ pequeño y una instrucción especial, del estilo Fetch and Add.
 
@@ -292,11 +293,11 @@ Process Coordinator
 end;
 ```
 
-|| Característica | Observación |
-|:-:|:-------:|:-----:|
-|:white_check_mark:| Resetea correctamente los contadores | Mucho más práctico que Shared Counter |
-|:white_check_mark:| Evita memory contention | Las posiciones de cada arreglo, se almacena en una línea caché distintas |
-|:x:| Útil para un _n_ chico. | El tiempo de ejecución del coordinador es proporcional a _n_ |
+|                    |            Característica            |                               Observación                                |
+| :----------------: | :----------------------------------: | :----------------------------------------------------------------------: |
+| :white_check_mark: | Resetea correctamente los contadores |                  Mucho más práctico que Shared Counter                   |
+| :white_check_mark: |       Evita memory contention        | Las posiciones de cada arreglo, se almacena en una línea caché distintas |
+|        :x:         |       Útil para un _n_ chico.        |       El tiempo de ejecución del coordinador es proporcional a _n_       |
 
 
 ##### Principio de sincronización por banderas
@@ -368,9 +369,9 @@ Process Root
 End.
 ```
 
-|| Característica | Observación |
-|:-:|:-------:|:-----:|
-|:white_check_mark:| Útil para un _n_ grande. | El alto del árbol es _log<sub>2</sub> n_ |
+|                    |      Característica      |               Observación                |
+| :----------------: | :----------------------: | :--------------------------------------: |
+| :white_check_mark: | Útil para un _n_ grande. | El alto del árbol es _log<sub>2</sub> n_ |
 
 :bulb: Opción más adecuada para maquinas con memoria distribuida.
 
@@ -434,9 +435,9 @@ V(s): < s = s + 1; >
 ```
 
 | Tipo de semáforo | Valores posibles del contador |
-|:----------------:|:-----------------------------:|
-| Binario | Entre 0 y 1 |
-| General | Entre 0 e ∞ |
+| :--------------: | :---------------------------: |
+|     Binario      |          Entre 0 y 1          |
+|     General      |          Entre 0 e ∞          |
 
 #### Para secciones críticas
 
@@ -476,24 +477,16 @@ Process Workers2
 end;
 ```
 
-### Técnicas
+### Problemas y Técnicas
 
 
-#### Splitted Binary Semaphore (SBS)
+####  Productores y consumidores: Split Binary Semaphore (SBS) 
 
-Dos semáforos binarios, inicializados en 0 y 1 respectivamente, son manipulados como si fuesen un único semáforo. La suma de ambos siempre debe dar 1 (uno).
+> La técnica **_split binary semaphores_** consiste en combinar 2 (dos), o más, semáforos binarios como si fuesen un solo. Todo conjunto de semáforos, formaran un SBS si cumplen la siguiente regla: $0 \leq s_{1} + s_{2} + ... + s_{n} \leq 1$.
 
-Por ejemplo, para el siguiente problema de productores y consumidores: en un programa los procesos se comunican mediante una buffer de mensajes de tamaño 1 (uno). Es decir, la cola solo permite almacenar un solo mensaje.
+Dado un programa donde los procesos se comunican, entre sí, mediante un **búffer con capacidad para 1 (un) mensaje**. En dicho programa, existiran 2 (dos) clases de procesos: los productores y los consumidores. **Los productores**; crean mensajes, esperan a que el búffer esté vacío, depositarán su mensaje y marcarán el búffer como lleno. Mientras que, **los consumidores**; esperan a que el búffer esté lleno, retiran el mensaje y marcan el búffer como vacío.
 
-En dicho programa, existiran procesos productores que generaran y depositaran mensajes en la cola. Y otros procesos, consumidores, que retiraran mensajes de la cola.
-
-Claramente, los procesos deben sincronizarse. Dicha sincronización debe contemplar el siguiente escenario: 
-1. los productores crean el mensaje, esperan a que el buffer esté vacío, depositan el mensaje y marcan al buffer como lleno. 
-2. Los consumidores esperan a que el buffer esté lleno, retiran el mensaje y marcan el buffer como vacío.
-
-La forma más sencilla de implementar esta señalización es empleando semáforos en términos de los estados posibles del buffer; empty (vacío) inicialmente en 1, y full (lleno) inicialmente en 0.
-
-Juntos, empty y full,  son dos semáforos binarios que conforman un Split Binary Semaphore, que garantiza la exclusión mutua sobre el acceso al buffer.
+La forma más sencilla de sincronizar a los procesos es; utilizar semáforos en terminos de los estados posibles del búffer; `empty` y `full`. Juntos, `empty` y `full`, conforman un split binary semaphore que; proveerá exclusión mutua sobre el acceso del búffer.
 
 ```
 sem empty = 1, full = 0;
@@ -516,15 +509,11 @@ Process Producer[1..n]
 End.
 ```
 
-#### Contadores de recursos
+#### Búffers limitados: Contadores de recursos
 
-Usualmente los procesos compiten por el acceso a recursos limitados. En esos casos, los semáforos pueden ser utilizados como contadores de recursos disponibles.
+> Usualmente los procesos compiten por el acceso a recursos limitados. En esos casos, **semáforos generales**; pueden ser utilizados como contadores de recursos disponibles.
 
-Podemos extender el ejemplo de Split Binary Semaphores, a un buffer con capacidad de _n_. En este caso, el recurso son los espacios libres del buffer.
-
-En este ejemplo, los requerimientos de sincronización son idénticos. La única diferencia es que el semáforo empty es inicializado en _n_, convirtiéndose en un semáforo general, ya que inicialmente existe _n_ posiciones libres en el arreglo.
-
-Como adición, se debe aplicar exclusión mutua para que distintos consumidores no recuperen el mismo mensaje (mantener consitente `front`) y para, que los productores no sobreescriban mensajes (mantener consistente `near`).
+Podemos extender el ejemplo de split binary semaphores, a un **buffer con capacidad de _n_**. En este caso, el recurso son los espacios libres del buffer. Como adición, se debe aplicar exclusión mutua para que distintos consumidores no recuperen el mismo mensaje (mantener consitente `front`) y para, que los productores no sobreescriban mensajes (mantener consistente `near`).
 
 ```
 int front, rear = 0;
@@ -554,9 +543,9 @@ Process Consumer[1..n]
 End.
 ```
 
-#### Exlusión mutua selectiva
+#### Dining Philosophers y lectores/escritores: Exlusión mutua selectiva
 
-La exlusión mutua selectiva, se presenta cuando cada proceso compite contra un subconjunto de procesos (por un recurso). En lugar de, competir contra todos.
+> La exlusión mutua selectiva, se presenta cuando cada proceso compite contra un subconjunto de procesos (por un recurso). En lugar de, competir contra todos.
 
 Por ejemplo: cinco filósofos se sientan a comer en una mesa redonda donde hay solo cinco tenedores. Cada filósofo, para comer, requiere de dos tenedores. Esto implica que; dos filósofos vecinos no pueden comer al mismo tiempo y que, a lo sumo, solo dos filósofos podrán comer al mismo tiempo.
 
@@ -588,12 +577,11 @@ Process Philosopher[4]
 end;
 ```
 
-#### Passing the batton
+#### Lectores y escritores: Exclusión mutua selectiva
 
-Técnica que emplea Split Binary Sempahores (SBS) para proveer exclusión mutua y despertar procesos demorados, en el orden en que fue demorado.
+Otro ejemplo, de exclusión mutua selectiva, donde clases de procesos, compiten por el acceso a un recurso es el siguiente. Procesos **escritores**, que requieren acceso exclusivo para evitar interferencias. Y procesos, **lectores**, los cuales pueden acceder de forma concurrente entre sí (siempre y cuando no haya escritores haciendo uso de la base de datos).
 
-Supongamos el siguiente problema clásico de **lectores y escritores**. Procesos escritores, que requieren acceso exclusivo para evitar interferencias. Y procesos, lectores, los cuales pueden acceder de forma concurrente entre sí (siempre y cuando no haya escritores haciendo uso de la base de datos). 
-Este es otro ejemplo de exclusión mutua selectiva: donde clases de procesos, compiten por el acceso a un recurso. 
+El siguiente algoritmo, resuelve el problema implementando exclusión mutua básica. No obstante, esta solución **no es fair**. Ya que, prioriza lectores por sobre escritores.
 
 ```
 int nr = 0; # lectores activos
@@ -623,46 +611,73 @@ Process Reader
 end;
 ```
 
-El algoritmo anterior, resolvió el problema realizando un implementación básica de exclusión mutua. Sin embargo, no es una solución del todo fair ya que; le da preferencia a los lectores por sobre los escritores.
+#### Lectores y escritores: Passing the batton
 
-Una mejor solución sería, implementar la técnica de passing the batton desde el punto de vista de la sincronización por condición.
+> Técnica que utiliza **split binary semaphores** para proveer exclusión mutua y despertar procesos demorados (incluso respetando su orden). Empleando esta técnica, podremos especificar **sentencias await arbitrarias**. Su implementación, respeta la siguiente forma:  
+> - Un semáforo **_e_**, inicialmente en 1, para controlar las entradas a secciones críticas.
+> - Un semáforo **_b<sub>j</sub>_** para demorar procesos hasta que, su guarda, **_B<sub>j</sub>_** sea verdadera
+> - Un contador **_d<sub>j</sub>_** para contar los procesos demorados sobre **_b<sub>j</sub>_**.
+>
+> Cuando un proceso se encuentra en su sección crítica, retiene el permiso de ejecucíon (**baton**). Al finalizar, le pasa el permiso a otro proceso (si lo hubiera) o bien, lo libera.
 
-Cuando un proceso ingresa a su sección crítica, retiene el baton (control). Esto significa que tiene el permiso para ejecutar.
-Cuando el proceso sale de su sección crítica, entrega el baton a otro proceso. Si ningún proceso está intentando acceder a su sección crítica, el baton se libera para que lo tome el próximo proceso que intente ingresar a su sección crítica.
-A grandes rasgos, debe implementarse con la siguiente especificación de variables. Donde los semáforos en (1) y (3) conforman el SBS.
-
-1. Un semáforo para mutex iniciado en 1.
-2. Una variable contadora por cada tipo de proceso.
-3. Un semáforo por contador, iniciado en 0.
+El siguiente algoritmo, resuelve el problema introduciendo la técnica passing the baton donde: **_e_** &rarr; `e`,  **_b<sub>j</sub>_** &rarr; `r` y `w` y por último, **_d<sub>j</sub>_** &rarr; `delayedWriters` y `delayedReaders`.
+Si bien este algoritmo, sigue priorizando a los lectores; podremos modificar a **SIGNAL** para darle la política que quisieramos.
 
 ```
-int activeReaders = 0,
-    activeWriters = 0;
+int activeReaders = 0,  # Lectores activos
+    activeWriters = 0;  # Escritores activos
 
-int delayedReaders = 0,
-    delayedWriters = 0;
+int delayedReaders = 0, # Lectores demorados
+    delayedWriters = 0; # Escritores demorados
 
-sem e = 1,  # Control (batton)
+sem e = 1,  # Baton
     r = 0,  # Demora lectores
     w = 0;  # Demora escritores
-            # Siempre 0 <= (e+r+w) <= 1
+            # SBS: Siempre 0 <= (e+r+w) <= 1
 
 SIGNAL:
     if (activeWriters == 0 & activeReaders > 0)
-        delayedReaders = delayedReaders - 1;
+        delayedReaders--;
         V(r);
     elseif (activeReaders == 0 & activeWriters == 0 & delayedWriters > 0)
-        delayedWriters = delayedWriters - 1;
+        delayedWriters--
         V(w);
     else
         V(e);
 
-Process Reader[1..n]
-
-    P(e);
-
+Process Writer[1..n]
+    while (true)
+        P(e);
+        if (activeReaders > 0 or activeWriters > 0)
+            delayedWriters++;
+            V(e);
+            P(w);
+        end;
+        activeWriters++;
+        SIGNAL
+        # Escribir en la bbbd ...
+        P(e);
+        activeWriters--;
+        SIGNAL
+    end;
 End.
 
+Process Reader[1..n]
+    while (true)
+        P(e);
+        if (activeWriters > 0)
+            delayedReaders++;
+            V(e);
+            P(r);
+        end;
+        activeReaders++;
+        SIGNAL
+        # Leer en la bbbd ...
+        P(e);
+        activeReaders--;
+        SIGNAL
+    end;
+End.
 ```
 
 
