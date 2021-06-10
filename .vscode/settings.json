@@ -1,27 +1,5 @@
 {
     "latex-workshop.latex.outDir": "./build",
-    "latex-workshop.latex.clean.fileTypes":[
-        "./build/*.aux",
-        "./build/*.bbl",
-        "./build/*.blg",
-        "./build/*.idx",
-        "./build/*.ind",
-        "./build/*.lof",
-        "./build/*.lot",
-        "./build/*.out",
-        "./build/*.toc",
-        "./build/*.acn",
-        "./build/*.acr",
-        "./build/*.alg",
-        "./build/*.glg",
-        "./build/*.glo",
-        "./build/*.gls",
-        "./build/*.fls",
-        "./build/*.log",
-        "./build/*.fdb_latexmk",
-        "./build/*.snm",
-        "./build/*.synctex(busy)",
-        "./build/*.synctex.gz(busy)",
-        "./build/*.nav"
-    ]
+    "latex-workshop.latex.autoClean.run": "onBuilt",
+    "latex-workshop.latex.clean.subfolder.enabled": true,
 }
