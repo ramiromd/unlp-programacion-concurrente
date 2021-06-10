@@ -1,0 +1,720 @@
+% Preámbulo
+\documentclass[a4paper, 11pt]{book}
+%\setlength{\parskip}{1.5mm}
+
+\usepackage[spanish]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage{listings}
+
+\lstset{
+    basicstyle=\small\ttfamily,
+    showstringspaces=false,
+    basewidth=1.2ex,
+    fontadjust=true,
+    escapechar=§,
+    numbers=left,
+    numberstyle=\tiny
+}
+
+% Cuerpo
+\begin{document}
+
+% Carátula
+\title{
+    II\\
+    Programación Concurrente\\
+    \large Clases 3 a 6: Memoria compartida
+}
+\author{Ramiro Martínez D'Elía}
+\date{2021}
+\maketitle
+\newpage
+
+% Índice
+\tableofcontents
+\newpage
+
+\chapter{Locks y Barriers}
+
+Los programas concurrentes emplean dos tipos básicos de sincronización: exclusión mutua y sincronización por condición. Este capítulo examina 2 (dos) problemas importantes (secciones críticas y barreras).
+
+El problema de la sección crítica se preocupa en implementar acciones atómicas por software. Este problema surge en la mayoría de los programas concurrentes, donde, la exclusión mutua es implementada mediante locks que protegen las secciones críticas.
+
+Una barrera (barrier), es un punto de sincronización al que todos los procesos deben llegar, antes de que cualquier proceso se le permita proceder. Es un problema muy común en los programas paralelos.
+
+\section{El problema de la sección crítica}
+
+En este problema, \textbf{\emph{n}} procesos repetidamente ejecutan secciones críticas y no cŕiticas de código. La sección crítica está precedida por un protocolo de entrada y seguida por un protocolo de salida. Los procesos que contengan secciones críticas, deberían ser de la siguiente forma.
+
+\begin{lstlisting}
+Process SeccionCritica[i = 1 to n]
+    while (true)
+       # Entry protocol
+       # critical section
+       # Exit protocol
+       # Noncritical section
+    end;
+ end;
+\end{lstlisting}
+
+Cada sección crítica, es un conjunto de sentencias que acceden a algún recurso compartido. Mientras que, cada sección no crítica es otra secuencia de instrucciones. Para resolver este problema, es necesario implementar protocolos de entrada y salida que cumplan las siguiente 4 (cuatro) propiedades:
+
+\begin{enumerate}
+    \item \textbf{Exclusión mutua:} A lo sumo un proceso podrá estar ejecutando su sección crítica. Esta es una \textbf{\emph{propiedad de seguridad}}; donde lo malo que puede ocurrir es que 2 (dos), o más, procesos accedan a su sección crítica en el mismo momento.
+    \item \textbf{Ausencia de deadlock:} Si 2 (dos) o más procesos intentan entrar a sus secciones críticas, al menos uno tendrá éxito. Esta es una propiedad \textbf{\emph{propiedad de seguridad}}; donde lo malo que puede ocurrir es que todos los procesos estén esperando ingresar pero, ninguno sea capaz de lograrlo.
+    \item \textbf{Ausencia de demoras inecesarias:} Si un proceso intenta ingresar a su sección crítica y los demás procesos se encuentran ejecutando sus secciones no críticas o finalizaron, el primer proceso no debe estar impedido de ingresar a su sección crítica. Esta es una \textbf{\emph{propiedad de seguridad}}, donde lo malo que puede ocurrir es que; un proceso no pueda ingresar a su sección crítica aunque no haya procesos en sus secciones críticas.
+    \item \textbf{Eventual entrada:} Todo procesos que intente ingresar a su sección crítica, eventualmente lo logrará. Esta es una \textbf{\emph{propiedad de vida}} y es afectada directamente por la política de scheduling.
+\end{enumerate}
+
+Cualquier solución al problema de la sección crítica, también puede ser utilizada para implementar sentencias \textbf{\emph{await arbitrarias}}.
+
+\section{Señalizando con barreras}
+
+Varios problemas pueden ser resueltos utilizando algoritmos iterativos que sucesivamente computen aproximaciones a la respuesta. Terminando cuando la respuesta final haya sido procesada, o bien, haya convergido.
+
+La idea es utilizar múltiples procesos, para procesar partes disjuntas de una solución en paralelo. La clave principal en la mayoría de los algoritmos paralelos, es que cada iteración depende del resultado de una iteración previa. Así, podemos llegar a la siguiente forma general para todo algoritmo que implemente barreras.
+
+\begin{lstlisting}
+Process Worker[i = 1 .. n]
+    while (true)
+       # Realiza la tarea i
+       # Espera por los demas procesos
+    end;
+ end;
+\end{lstlisting}
+
+Esto es llamado sincronización por barrera, porque la demora al final de cada iteración representa una barrera a la cual todos los procesos deben llegar, antes de que a cualquier otro se le permita continuar.
+
+\subsection{Barreras simétricas}
+
+Si todos los procesos ejecutan el mismo algoritmo y cada proceso está ejecutando en un procesador distinto. Entonces, todos los procesos deberían llegar a la barrera casi al mismo tiempo.
+
+Esta es la opción más adecuada para programas que ejecuten en máquinas con memoria compartida. Mas adelante, se abordarán algoritmos para este tipo de barreras; el \textbf{\emph{butterfly}} y \textbf{\emph{dissemination barrier}} más precisamente.
+
+\subsection{Principio de sincronización por banderas}
+
+Algunas soluciones, como \textbf{\emph{flags and coordinators}}, implementan este principio de sincronización. El cual, se basa en las siguientes premisas:
+
+\begin{enumerate}
+    \item El proceso que espera por un flag de condición, es el único que puede limpiar dicho flag.
+    \item Un flag no puede ser activado, nuevamente, hasta no ser "limpiado".
+\end{enumerate}
+
+\chapter{Soluciones con variables compartidas}
+
+\section*{Introducción}
+
+La sincronización, en esta sección, será implementada mediante la técnica de \textbf{\emph{busy waiting}}. Donde un proceso evalúa, repetidas veces, una condición hasta que esta se vuelva verdadera.
+
+\textbf{Ventajas}
+\begin{enumerate}
+    \item Puede ser implementada utilizando instrucciones, de máquina, disponibles es cualquier procesador moderno.
+    \item Adecuada si cada proceso se ejecuta en su propio procesador.
+\end{enumerate}
+
+\textbf{Desventajas}
+\begin{enumerate}
+    \item Ineficiente en arquitecturas monoprocesador.
+\end{enumerate}
+
+\section{Para secciones críticas}
+
+\subsection{Spin locks}
+
+Solución de grano fino que utiliza instrucciones atómicas especiales, existentes en la mayoría de los procesadores. Por ejemplo, \textbf{\emph{Test and Set (TS)}}. Se dice que los procesos dan “vueltas” (spinning) hasta que se libere lock.
+
+\begin{lstlisting}
+bool lock = false;
+
+Process CS[i = 1 to n]
+    while (true)
+        while (TS(lock)) skip;    # Entry
+        # Critical Section
+        lock = false;             # Exit
+        # Noncritical Section
+    end;
+end;
+\end{lstlisting}
+
+\textbf{Ventajas}
+\begin{enumerate}
+    \item Cumple con 3 (tres) de los requisitos, para secciones críticas: \emph{garantiza exclusión mutua}, \emph{ausencia de deadlock} y \emph{ausencia de demoras inecesarias}.
+\end{enumerate}
+
+\textbf{Desventajas}
+\begin{enumerate}
+    \item La \emph{eventual entrada} se garantiza solo con \emph{schedulers fuertemente fairs}. Ya que lock se vuelve verdadera, con infinita frecuencia.
+    \item No atiende prioridades, es decir; no controla el orden en que los procesos, demorados, entran a su sección crítica.
+\end{enumerate}
+
+\subsection{Implementaciones Fair}
+\textbf{\emph{Spin locks}}, no termina siendo del todo adecuada. Sería deseable, contar con algoritmos que:
+\begin{enumerate}
+    \item Cumplan las 4 (cuatro) propiedades, de una sección crítica.
+    \item Solo dependan de \emph{schedulers débilmente fair}.
+    \item Sean más justos. Es decir, manejen prioridades.
+\end{enumerate}
+
+Los algoritmos \textbf{\emph{Tie breaker}}, \textbf{\emph{Ticket}} y \textbf{\emph{Bakery}} parecen más adecuados ya que, cumplen con todos los requisitos mencionados anteriormente.
+
+\subsection{Tie breaker}
+
+Este algoritmo asegura la exclusión mutua mediante dos variables, una por proceso, \emph{in1} e \emph{in2}. En caso de que ambas valgan verdadero (empate) emplea una variable adicional, \emph{last}, para determinar cuál fue el último en ingresar a su sección crítica.
+
+\begin{lstlisting}
+bool in1, in2 = false;
+int last = 1;
+    
+Process CS1
+    while (true)
+        last = 1; in1 = true; # Entry
+        while (in2 and last == 1) skip;
+        # Critical Section
+        in1 = false; #Exit
+        # Noncritical Section
+    end;
+end;
+    
+Process CS2
+    while (true)
+        last = 2; in2 = true; # Entry
+        while (in1 and last == 2) skip;
+        # Critical Section
+        in2 = false; # Exit
+        # Noncritical section
+    end;
+end;
+\end{lstlisting}
+
+\textbf{Ventajas}
+\begin{enumerate}
+    \item No requiere instrucciones especiales.
+    \item Prioriza al primer proceso, en iniciar el protocolo de entrada.
+\end{enumerate}
+
+\textbf{Desventajas}
+\begin{enumerate}
+    \item Dificil generalizarlo a \emph{n} procesos.
+\end{enumerate}
+
+\subsection{Ticket}
+
+El algoritmo ticket, es una solución al problema de la sección crítica generalizada para \emph{n} procesos, fácil de entender e implementar. El algoritmo se basa en la entrega de tickets (números) a procesos y posteriormente atenderlos en orden de llegada.
+
+Para esto, obligatoriamente, se requiere de alguna instrucción especial que entregue e incremente los números a cada proceso de forma atómica, para evitar duplicados. Esta instrucción puede ser \textbf{\emph{Fetch and Add}}. De no existir una instrucción máquina, de este tipo, se puede reemplazar con otra sección crítica.
+
+\begin{lstlisting}
+int number = 1,
+    next = 1; 
+
+int[] turn[n] = ([n] 0);
+
+Process WithFA [i = 1 .. n]
+    turn[i] = FA(number, 1);
+    while (turns[i] != next) skip;  # Entry
+    # Critical Section
+    next = next + 1;                # Exit
+    # Noncritical Section
+end;
+
+Process WithoutFA [i = 1 .. n]
+    turn[i] = number;               # Reemplazo FA
+    < number = number + 1 >         # Reemplazo FA
+    while (turns[i] != next) skip;  # Entry
+    # Critical Section
+    next = next + 1;                # Exit
+    # Noncritical Section
+end;
+\end{lstlisting}
+
+\textbf{Ventajas}
+\begin{enumerate}
+    \item Sencillo de implemetar.
+    \item General para \emph{n} procesos.
+\end{enumerate}
+
+\textbf{Desventajas}
+\begin{enumerate}
+    \item La implementación sin instrucciones especiales, puede entregar números repetidos. Esto, decrementa el grado de justicia del algoritmo.
+\end{enumerate}
+
+
+\subsection{Bakery}
+
+Al igual que en el algoritmo ticket, los procesos obtienen un número y esperan a ser atendidos. La diferencia radica en que en el algoritmo bakery, cada proceso debe revisar el número de los demás para obtener uno mayor a todos los que se encuentran demorados.
+
+\begin{lstlisting}
+int[] turn[n] = ([n] 0);
+
+Process SC [i = 1 .. n]
+    while (true)
+        turn[i] = 1; 
+        turn[i] = max(turn) + 1;
+        for (j = 1 to n st j != i)                              # Entry
+            while (turn[j] != 0 and turn[i] > turn[j]) skip;    # Entry
+        # Critical Section
+        turn[i] = 0;                                            # Exit
+        # Noncritical Section
+    end;
+end;
+\end{lstlisting}
+
+\textbf{Ventajas}
+\begin{enumerate}
+    \item No requiere instrucciones especiales.
+    \item General para \emph{n} procesos.
+\end{enumerate}
+
+\textbf{Desventajas}
+\begin{enumerate}
+    \item Resulta complejo, y costoso, calcular el máximo entre \emph{n} valores.
+\end{enumerate}
+
+
+\section{Para barreras}
+
+\subsection{Shared counter}
+
+La manera más sencilla de especificar una barrera, es la de utilizar un contador compartido iniciado en 0 (cero). 
+
+Asumiendo que existan \emph{n} procesos que necesitan reunirse en un barrera. Cuando un proceso llega a la barrera, incrementa el contador; cuando el contador valga \emph{n}, todos los procesos podrán continuar.
+
+\begin{lstlisting}
+int count = 0;
+
+Process Worker[i = 1 .. n]
+    while (true)
+        # Realizar tarea ...
+        FA(count, 1);
+        while (count != n) skip;
+    end;
+end;
+\end{lstlisting}
+
+\textbf{Ventajas}
+\begin{enumerate}
+    \item Solución adecuada para un \emph{n} pequeño.
+\end{enumerate}
+
+\textbf{Desventajas}
+\begin{enumerate}
+    \item La variable \emph{count} debe ser reiniciada cuando todos crucen la barrera y, por sobre todo, antes de que cualquier proceso intente incrementarla.
+    \item Requiere instrucciones especiales.
+    \item Requiere una política de administración eficiente. La variable \emph{count} es referenciada varias veces, esto puede provocar \textbf{\emph{Memory Contention}}.
+\end{enumerate}
+
+\subsection{Flags and coordinators}
+
+El algoritmo utiliza \textbf{dos arreglos como flags}; el primero para marcar la llegada de cada proceso a la barrera. Y el segundo, para indicar a cada proceso que puede continuar. Este último arreglo es actualizado por un proceso coordinador.
+
+\begin{lstlisting}
+int[] arrive[n] = ([n] 0);
+int[] continue[n] = ([n] 0);
+
+Process Worker[i = 1.. ]
+    while (true)
+        # Realizar tarea
+        arrive[i] = 1;
+        while (continue[i] == 0) skip;
+        continue[i] = 0;
+    end;
+end;
+
+Process Coordinator
+    while (true)
+        for (i = 1 to n)
+            while (arrive[i] == 0) skip;
+            arrive[i] = 0;
+        end;
+        for (i = 1 to n)
+            continue[i] = 1
+    end;
+end;
+\end{lstlisting}
+
+\textbf{Ventajas}
+\begin{enumerate}
+    \item Resetea correctamente los contadores.
+    \item Evita \textbf{\emph{memory contention}}. Ya que, cada elemento del arreglo utiliza una línea de caché distinta.
+\end{enumerate}
+
+\textbf{Desventajas}
+\begin{enumerate}
+    \item El tiempo de ejecución del coordinador, es proporcional a \emph{n}. Por su uso, no es recomendable para \emph{n} muy grandes.
+\end{enumerate}
+
+\subsection{Tree barrier}
+Este algoritmo combina el rol de los workers y el del coordinador, de forma tal que cada worker es, también, un coordinador.
+
+Los procesos son organizados en forma de árbol y se procede con la siguiente lógica: cada nodo worker primero espera a que sus hijos le den la señal de llegada, luego avisa a su padre que él también llegó.
+
+Cuando el nodo raíz, recibe la señal de llegada de sus hijos se sobreentiende que todos los demás workers también lo hicieron. Así, la raíz envía la señal de continuar a sus hijos y así sucesivamente.
+
+\begin{lstlisting}
+int[n] arrive = 0;
+int[n] continue = 0;
+    
+Process Leaf[1..L]
+    # Hacer algo ...
+    arrive[L] = 1;
+    < await (continue[L] == 1) >
+    continue[L] = 0;
+End.
+    
+Process Internal[1..I]
+    < await(arrive[left] == 1) >
+    arrive[left] = 0;
+    < await(arrive[right] == 1) >
+    arrive[right] = 0;
+    # Hacer algo ...
+    arrive[I] = 1;
+    < await(continue[I] == 1) >
+    continue[I] = 0;
+    < continue[left] = 1; continue[right] = 1; >
+End.
+    
+Process Root
+    < await(arrive[left] == 1) >
+    arrive[left] = 0;
+    < await(arrive[right] == 1) >
+    arrive[right] = 0;
+    # Hacer algo ...
+    arrive[R] = 1;
+    < continue[left] = 1; continue[right] = 1; >
+End.
+\end{lstlisting}
+
+\textbf{Ventajas}
+\begin{enumerate}
+    \item Útil para \emph{n} muy grandes ya que, el tiempo de ejecución es proporcional al alto del árbol: $\log_2n$.
+    \item Adecuado para máquinas con memoria distribuida.
+\end{enumerate}
+
+\subsection{Butterfly}
+La idea es conectar barreras de pares de procesos, para construir una barrera de \emph{n} procesos. Asumiendo que \emph{Worker[1:n]} es un arreglo de procesos y que \emph{n} es potencia de 2, podríamos combinarlos de la siguiente manera.
+
+Por la forma de conexión, es conocida como butterfly barrier. Como se aprecia en la figura, cada proceso se conecta con otro distinto en cada una de sus $\log_2n$ pasadas. Más precisamente, en cada pasada, cada proceso se sincroniza con otro a una distancia $2^{S-1}$.
+
+Cuando un proceso finalizó todas sus pasadas, todos los procesos arribaron a la barrera y pueden proceder. Esto es, porque los procesos están directa o indirectamente sincronizados los unos con los otros.
+
+\begin{lstlisting}
+int[n] arrive = 0;
+
+Process Worker[1..n]
+    for (s = 1 to stages)                       # log2 (n)
+        arrive[i] = arrive[i] + 1;
+        j = neighbord_for(s);                   # 2^(s-1)
+        while (arrive[j] < arrive[i]) skip;     # Barrier
+    end;
+End.
+\end{lstlisting}
+
+Si \emph{n} no fuese potencia de 2, podría utilizarse el siguiente \emph{n} potencia de 2. Generando workers substitutos para cada iteración. Este workaround, decrementa la eficiencia del algoritmo.
+
+\section{Defectos}
+
+La mayoría de los protocolos implementados por \textbf{\emph{busy waiting}} son \textbf{\emph{complejos}} y la \textbf{\emph{separación entre variables}}, utilizadas para la sicronización y para cómputo general, es \textbf{\emph{poco clara}}.
+
+Otro defecto es la \textbf{\emph{ineficiencia}} de los protocolos de busy waiting \textbf{\emph{en la mayoria de los programas multihilos}} Excepto para el caso de los programas paralelos donde el número de procesos concuerde con el número de procesadores. No obstante, usualmente, existen más procesos que procesadores y \textbf{\emph{resulta menos productivo otorgar CPU a procesos para que hagan spinning en lugar de cómputo}}.
+
+El concepto de la sincronización es fundamental en los programas concurrentes. Por esto, es deseable tener herramientas especiales para el diseño de protocolos de sincronización correctos (\textbf{\emph{semáforos}} y \textbf{\emph{monitores}}).
+
+\chapter{Soluciones con semáforos}
+
+Al igual que los semáforos viales sirven para proveer un mecanismo de señalización para prevenir accidentes. En los programas concurrentes, los semáforos sirven para proveer un mecanismo de señalización entre procesos e implementar exclusión mutua y sincronización por condición.
+
+\section{Sintáxis y semántica}
+
+Un semáforo es una variable compartida, que puede pensarse en términos de una instancia de la clase semáforo. Dicha clase, posee solo dos métodos y una variable interna contador. 
+
+El método \textbf{\emph{v}} es utilizado para señalar la ocurrencia de un evento, y en consecuencia incrementa de forma atómica el contador interno.
+
+El método \textbf{\emph{p}}, demora al proceso hasta que un evento haya ocurrido y decrementa de forma atómica el contador interno.
+
+Por último, el \textbf{\emph{contador}} es una variable que sólo toma valores enteros positivos.
+
+\begin{lstlisting}
+sem s;
+P(s): < await(s > 0) s = s - 1; >
+V(s): < s = s + 1; >
+\end{lstlisting}
+
+\begin{table}
+\begin{tabular}{lllll} 
+\hline
+Tipo de semáforo & Valores posibles del contador \\ 
+\hline
+Binario & Entre 0 y 1 \\ 
+\hline
+Binario & Entre 0 y $\infty$ \\ 
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Para secciones críticas}
+
+El problema de la sección crítica se puede resolver empleando una variable \emph{lock}. La cual, valdrá 1 (\emph{true}) si no hay procesos en su sección crítica ó 0 (\emph{false}) en caso contrario.
+
+Cuando un proceso desea entrar en su sección crítica; primero deberá esperar a que lock valga 1 (\emph{true}) y luego colocar lock en 0 (\emph{false}). Cuando un proceso sale, deberá colocar a lock nuevamente en (\emph{true}).
+
+\begin{lstlisting}
+sem mutex = 1;
+Process SC[i = 1 .. n]
+    while (true)
+        P(mutex);     # Entry
+        # Seccion Critica
+        V(mutex);     # Exit
+        # Seccion no critica
+    end;
+end;
+\end{lstlisting}
+
+\section{Split Binary Semaphores}
+
+La técnica split binary semaphores consiste en combinar 2 (dos), o más, semáforos binarios como si fuesen un solo. Todo conjunto de semáforos, formaran un SBS si cumplen la siguiente regla: $0 \leq s_{1} + s_{2} + ... + s_{n} \leq 1$.
+
+\subsection{Productores y consumidores}
+
+Dado un programa donde los procesos se comunican, entre sí, mediante un \textbf{\emph{búffer con capacidad para 1 (un) mensaje}}. En dicho programa, existiran 2 (dos) clases de procesos: los productores y los consumidores. Los \textbf{\emph{productores}}; crean mensajes, esperan a que el búffer esté vacío, depositarán su mensaje y marcarán el búffer como lleno. Mientras que, los \textbf{\emph{consumidores}}; esperan a que el búffer esté lleno, retiran el mensaje y marcan el búffer como vacío.
+
+La forma más sencilla de sincronizar a los procesos es; utilizar semáforos en terminos de los estados posibles del búffer; \emph{empty} y \emph{full}. Juntos, \emph{empty} y \emph{full}, conforman un split binary semaphore que; proveerá exclusión mutua sobre el acceso del búffer.
+
+\begin{lstlisting}
+sem empty = 1, full = 0;
+any buffer;
+
+Process Consumer[1..n]
+    while (true)
+        P(full);
+        message = buffer;
+        V(empty);
+    end;
+End.
+
+Process Producer[1..n]
+    while (true)
+        P(empty);
+        buffer = message;
+        V(full);
+    end;
+End.
+\end{lstlisting}
+
+\section{Contadores de recursos}
+
+Usualmente los procesos compiten por el acceso a recursos limitados. En esos casos, \textbf{\emph{semáforos generales}}; pueden ser utilizados como contadores de recursos disponibles.
+
+\subsection{Buffers limitados}
+
+Dado un programa donde los procesos se comunican, entre sí, mediante un \textbf{\emph{búffer con capacidad para n mensaje}}. En dicho programa, existiran 2 (dos) clases de procesos: los productores y los consumidores. Los \textbf{\emph{productores}}; crean mensajes, esperan a que el búffer esté vacío, depositarán su mensaje y marcarán el búffer como lleno. Mientras que, los \textbf{\emph{consumidores}}; esperan a que el búffer esté lleno, retiran el mensaje y marcan el búffer como vacío.
+
+En este caso, el recurso son los espacios libres del buffer. Como adición, se debe aplicar exclusión mutua para que distintos consumidores no recuperen el mismo mensaje (mantener consitente \emph{front}) y para, que los productores no sobreescriban mensajes (mantener consistente \emph{near}).
+
+\begin{lstlisting}
+
+    int front, rear = 0;
+sem empty = n, full = 0;
+sem mutexFetch = 1, mutexDeposit = 1;
+array[n] buffer; 
+
+Process Producer[1..n]
+    while (true)
+        P(empty);
+        P(mutexDeposit)
+        buffer[rear] = data;
+        rear = (rear + 1) % n;
+        V(mutexDeposit)
+        V(full)
+    end;
+End.
+
+Process Consumer[1..n]
+    while (true)
+        P(full);
+        P(mutexFetch)
+        data = buffer[front];
+        front = (front + 1) % n;
+        V(mutexFetch)
+    end;
+End.
+\end{lstlisting}
+
+\section{Exclusión mutua selectiva}
+
+La exlusión mutua selectiva, se presenta cuando cada proceso compite contra un subconjunto de procesos (por un recurso). En lugar de, competir contra todos.
+
+\subsection{Dining Philosophers}
+
+Por ejemplo: cinco filósofos se sientan a comer en una mesa redonda donde hay solo cinco tenedores. Cada filósofo, para comer, requiere de dos tenedores. Esto implica que; dos filósofos vecinos no pueden comer al mismo tiempo y que, a lo sumo, solo dos filósofos podrán comer al mismo tiempo.
+
+El problema de exclusión mutua selectiva se da entre cada par de filósofos y un tenedor. Tener en cuenta, de que si fuesen 3 filósofos, no sería un problema de exclusión mutua.
+
+
+\begin{lstlisting}
+sem forks[5] = {0,0,0,0,0}
+
+Process Philosopher[i = 0 to 3]
+    while(true)
+        p(fork[i]);
+        p(fork[i+1]);
+        # come ...
+        v(fork[i]); 
+        v(fork[i+1]);
+    end;
+end;
+
+Process Philosopher[4]
+    while(true)
+        p(fork[0]);
+        p(fork[4]);
+        # come ...
+        v(fork[0]); 
+        v(fork[4]);
+    end;
+end;
+\end{lstlisting}
+
+\subsection{Lectores y escritores}
+
+Otro ejemplo, de exclusión mutua selectiva, donde clases de procesos, compiten por el acceso a un recurso es el siguiente. Procesos escritores, que requieren acceso exclusivo para evitar interferencias. Y procesos, lectores, los cuales pueden acceder de forma concurrente entre sí (siempre y cuando no haya escritores haciendo uso de la base de datos).
+
+El siguiente algoritmo, resuelve el problema implementando exclusión mutua básica. No obstante, esta solución no es fair. Ya que, prioriza lectores por sobre escritores.
+
+\begin{lstlisting}
+int nr = 0; # lectores activos
+sem rw = 1; # acceso a bbdd
+sem mutexR = 1; # acceso a nr
+
+Process Writer
+    while (true)
+        P(rw);
+        # escribe en bbdd
+        V(rw);
+    end;
+end;
+
+Process Reader
+    while (true)
+        P(mutexR)
+        nr = nr + 1;
+        if (nr == 1) P(rw);
+        V(mutexR);
+        # lee en bbdd
+        P(mutexR)
+        nr = nr - 1;
+        if (nr == 0) V(rw);
+        V(mutexR);
+    end;
+end;
+\end{lstlisting}
+
+\section{Passing the batton}
+
+Técnica que utiliza \textbf{\emph{split binary semaphores}} para proveer exclusión mutua y despertar procesos demorados (incluso respetando su orden). Empleando esta técnica, podremos \textbf{\emph{especificar sentencias await arbitrarias}}. Su implementación, respeta la siguiente forma:
+
+\begin{enumerate}
+    \item Un semáforo \textbf{\emph{e}}. Inicialmente en 1 para, controlar los accesos a la sección crítica.
+    \item Un semáforo \textbf{\emph{$b_j$}} para demorar procesos hasta que, su guarda, \textbf{\emph{$B_j$}} sea verdadera.
+    \item Un contador \textbf{\emph{$d_j$}} para contar los procesos demorados por \textbf{\emph{$b_j$}}.
+\end{enumerate}
+
+Cuando un proceso se encuentra en su sección crítica, retiene el permiso de ejecución (\textbf{\emph{baton}}). Al finalizar, le pasa el permiso a otro proceso (si lo hubiera) o bien, lo libera.
+
+\subsection{Lectores y escritores}
+
+Resolveremos el mismo problema, de lectores y escritores, de la sección anterior introduciendo la técnica \textbf{\emph{passing the baton}}. Donde:
+
+\begin{itemize}
+    \item \textbf{\emph{e}} $\rightarrow$ \emph{e}
+    \item \textbf{\emph{$b_j$}} $\rightarrow$ \emph{r} y \emph{w}
+    \item \textbf{\emph{$d_j$}} $\rightarrow$ \emph{dr} y \emph{dw}
+\end{itemize}
+
+Si bien este algoritmo, sigue priorizando a los lectores; podremos modificar a \textbf{\emph{SIGNAL}} para darle la política que quisieramos.
+
+\begin{lstlisting}
+int nr = 0,  # Lectores activos
+    nw = 0;  # Escritores activos
+
+int dr = 0, # Lectores demorados
+    dw = 0; # Escritores demorados
+
+sem e = 1,  # Baton
+    r = 0,  # Demora lectores
+    w = 0;  # Demora escritores
+            # SBS: Siempre 0 <= (e+r+w) <= 1
+
+SIGNAL:
+    if (nw == 0 & nr > 0)
+        dr--;
+        V(r);
+    elseif (nr == 0 & nw == 0 & dw > 0)
+        dw--
+        V(w);
+    else
+        V(e);
+
+Process Writer[1..n]
+    while (true)
+        P(e);
+        if (nr > 0 or nw > 0)
+            dw++;
+            V(e);
+            P(w);
+        end;
+        nw++;
+        SIGNAL
+        # Escribir en la bbbd ...
+        P(e);
+        nw--;
+        SIGNAL
+    end;
+End.
+
+Process Reader[1..n]
+    while (true)
+        P(e);
+        if (nw > 0)
+            dr++;
+            V(e);
+            P(r);
+        end;
+        nr++;
+        SIGNAL
+        # Leer en la bbbd ...
+        P(e);
+        nr--;
+        SIGNAL
+    end;
+End.
+\end{lstlisting}
+
+Nota: Cuando utilizamos monitores, el análogo a esta técnica es \textbf{\emph{passing the condition}}.
+
+\section{Instrucciones máquina utilizadas}
+
+\subsection{Fetch and Add}
+De manera atómica incrementa \emph{number} en \emph{inc} veces y retorna su antiguo valor.
+
+\begin{lstlisting}
+FA (int number, int inc)
+    < int temp = number;
+    number = number + inc;
+    return temp; >
+end;
+\end{lstlisting}
+
+\subsection{Test and Set}
+
+De manera atómica setea \emph{lock} en true y retorna su antiguo valor.
+
+\begin{lstlisting}
+bool TS(bool lock)
+    < bool initial = lock; 
+    lock = true; 
+    return initial; >
+end;
+\end{lstlisting}
+
+\end{document}
+
