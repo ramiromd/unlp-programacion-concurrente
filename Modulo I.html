@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>M&oacute;dulo I</title>
+        <style>
+</style>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item { list-style-type: none; } .task-list-item-checkbox { margin-left: -20px; vertical-align: middle; }
+</style>
+        
+        
+        
+    </head>
+    <body class="vscode-body vscode-light">
+        <h1 id="módulo-i">Módulo I</h1>
+<p>🎯 <strong>Clases 1 y 2:</strong> <em>Conceptos básicos. Comunicación y sincronización. Interferencia.</em></p>
+<ul>
+<li><a href="#m%C3%B3dulo-i">Módulo I</a>
+<ul>
+<li><a href="#programa-concurrente-estados-acciones-e-historias">Programa concurrente: estados, acciones e historias</a></li>
+<li><a href="#acciones-at%C3%B3micas">Acciones atómicas</a></li>
+<li><a href="#propiedad-asv">Propiedad ASV</a></li>
+<li><a href="#sincronizaci%C3%B3n">Sincronización</a>
+<ul>
+<li><a href="#especificaci%C3%B3n">Especificación</a></li>
+</ul>
+</li>
+<li><a href="#propiedades">Propiedades</a></li>
+<li><a href="#scheduling-y-fairness">Scheduling y Fairness</a>
+<ul>
+<li><a href="#fairness-incondicional">Fairness incondicional</a></li>
+<li><a href="#fairness-d%C3%A9bil">Fairness débil</a></li>
+<li><a href="#fairness-fuerte">Fairness fuerte</a></li>
+<li><a href="#ejemplo">Ejemplo</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="programa-concurrente-estados-acciones-e-historias">Programa concurrente: estados, acciones e historias</h2>
+<p>El <strong><em>estado</em></strong>, de un programa concurrente, consiste en los valores de las variables del programa en un instante de tiempo dado. Pudiendo ser, variables explícitas (las definidas por el programador) como variables implícitas (<em>program counter</em>, <em>stack pointer</em>, etc ...).</p>
+<p>La ejecución, del programa concurrente, puede ser vista como el intercalado de secuencias de <strong><em>acciones atómicas</em></strong> ejecutadas por cada proceso. Así, cada ejecución particular del programa puede ser vista como una <strong><em>historia (trace)</em></strong>: S<sub>1</sub> → S<sub>2</sub> → ... S<sub>n</sub>.</p>
+<p>Cada ejecución de un programa concurrente, produce una historia. Inclusive, hasta en los programas más triviales, el número de historias posibles puede ser enorme. Por ejemplo; para el siguiente programa existen 2 (dos) historias posibles:</p>
+<pre><code><code><div>var x = 5; // (a)
+
+co
+    x = 0; // (b)
+    x = x + 1; // (c)
+oc
+</div></code></code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">#</th>
+<th style="text-align:center">Historia</th>
+<th style="text-align:center">Valor X</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">A → B → C</td>
+<td style="text-align:center"><code>x = 1</code></td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">A → C → B</td>
+<td style="text-align:center"><code>x = 0</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="acciones-atómicas">Acciones atómicas</h2>
+<p>Una <strong><em>acción atómica</em></strong>, es una acción que realiza un cambio de estado indivisible. Esto significa que, cualquier estado intermedio que pueda existir en la implementación de la acción no debe ser visible a los otros procesos.</p>
+<p>Una <strong><em>acción atómica de grano fino</em></strong>, es aquella implementada por el hardware (CPU) en el cual el programa concurrente es ejecutado.</p>
+<p>En un programa secuencial, las sentencias de asignación parecen ser atómicas. Esto es porque ningún estado intermedio es visible al programa. En los programas concurrentes, no se puede afirmar lo mismo. Una sentencia de asignación, puede estar implementada por una secuencia de instrucciones máquina de grano fino. Por ejemplo, para el siguiente programa.</p>
+<pre><code><code><div>var y = 0;
+var z = 0;
+
+co 
+    x = y + z; // (a) load x,y; (b) sum x,z;
+    y = 1; // (c) 
+    z = 2; // (d)
+oc
+</div></code></code></pre>
+<p>Asumiendo que la sentencia  <code>x = y + z</code>, a nivel máquina, es implementada con las instrucciones atómicas <code>load</code> y <code>sum</code>; podemos sostener que su ejecución no será atómica, ya que eventualmente podrá ser interrumpida. Esto se ve en, algunas de, las posibles historias del programa.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">#</th>
+<th style="text-align:center">Historia</th>
+<th style="text-align:center">Valor X</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">A → B → C → D</td>
+<td style="text-align:center"><code>x = 0</code></td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">C → A → B → D</td>
+<td style="text-align:center"><code>x = 1</code></td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">A → C → D → B</td>
+<td style="text-align:center"><code>x = 2</code></td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">C → D → A → B</td>
+<td style="text-align:center"><code>x = 3</code></td>
+</tr>
+</tbody>
+</table>
+<p>En todas las historias, la ejecución de B antecede a la de A (<code>x = y + z</code>). Lo cual, es deseable. Excepto en la historia número 3, donde se observa una interferencia.</p>
+<p>La <strong><em>interferencia</em></strong>, es un evento negativo. El cual se produce, cuando un proceso toma una acción que invalida las suposiciones hechas por otro proceso. Técnicas para evitar la interferencia, pueden ser:</p>
+<ol>
+<li>Variables disjuntas (disjoint variables)</li>
+<li>Afirmaciones debilitadas (weakened assertions)</li>
+<li>Invariantes globales (global invariants)</li>
+<li>Sincronización (synchronization)</li>
+</ol>
+<h2 id="propiedad-asv">Propiedad ASV</h2>
+<p>Una forma de detectar que una sentencia no posee interferencias y, por consiguiente, su ejecución parecerá atómica es verificar que la misma posea, a lo sumo, una referencia crítica.</p>
+<p>Una <strong><em>referencia crítica</em></strong>, en una expresión, es la referencia a una variable que es modificada por otro proceso. Toda expresión que contenga a lo sumo una referencia crítica, cumple con la <strong><em>propiedad  &quot;a lo sumo una vez&quot;</em></strong> y su ejecución parecerá atómica.</p>
+<p>Por ejemplo, la sentencia de asignación <em>x = expr</em> satisface la propiedad si se cumple alguna de las siguientes condiciones:</p>
+<ol>
+<li>Si <em>expr</em> contiene a lo sumo una referencia crítica, en cuyo caso <em>x</em> no podrá ser leída por otro proceso.</li>
+<li>Si <em>expr</em> no contiene referencias críticas, en cuyo caso <em>x</em> podrá ser leída por otro proceso.</li>
+</ol>
+<pre><code><code><div>    Program Uno;        |   Program Dos;        |   Program Tres;
+                        |                       |
+    var x = 0;          |   var x = 0;          |   var x = 0;
+    var y = 0;          |   var y = 0;          |   var y = 0;
+                        |                       |
+    co  x = x + 1; (a)  |   co  x = y + 1; (a)  |   co  x = y + 1; (a)
+    //  y = y + 1; (b)  |   //  y = y + 1; (b)  |   //  y = x + 1; (b)
+    oc                  |   oc                  |   oc
+</div></code></code></pre>
+<p>🚧🚧🚧🚧🚧🚧</p>
+<p>🚧  VERIFICAR HISOTIRAS Y CONSULTAR POR QUE HAY INTERFERENCIA EN 3</p>
+<p>🚧🚧🚧🚧🚧🚧</p>
+<p>✅ <strong>Program Uno</strong></p>
+<ul>
+<li>La sentencia del proceso A, no posee referencias críticas.</li>
+<li>La sentencia del proceso B, no posee referencias críticas.</li>
+</ul>
+<p>✅ <strong>Program Dos</strong></p>
+<ul>
+<li>La sentencia del proceso A, contiene una referencia crítica en <code>y + 1</code>. No obstante, <code>x</code> no es leída por otro proceso.</li>
+<li>La sentencia del proceso B, no posee referencias críticas.</li>
+</ul>
+<p>❌ <strong>Program Tres</strong></p>
+<ul>
+<li>La sentencia del proceso A, contiene una referencia crítica en <code>y + 1</code> y <code>x</code> es leída por otro proceso.</li>
+<li>La sentencia del proceso B, contiene una referencia crítica en <code>x + 1</code> e <code>y</code> es leída por otro proceso.</li>
+</ul>
+<p>📌 La propiedad también aplica para expresiones que, no sean de asignación.</p>
+<p>📌 Se asume que, en el proceso A del <strong>program dos</strong>, leer <code>y</code> antes o despues de su actualización es indistinto.</p>
+<h2 id="sincronización">Sincronización</h2>
+<p>La interacción entre los procesos, conlleva a una gran cantidad de historias posibles, como se vio en secciones anteriores. No obstante, no todas las historias posibles son deseables. Por ejemplo, una expresión que no satisfaga ASV provocará una historia no deseada.</p>
+<p>En general, es deseable, ejecutar secuencias de instrucciones como una única acción atómica que prevengan intercalados no deseados. A estas secuencias de instrucciones las llamaremos <strong>acciones atómicas de grano grueso</strong>.</p>
+<p>El rol de la <strong>sincronización</strong>, es la de permitir la construcción de estas acciones atómicas de grano grueso. Y así evitar la interferencia entre procesos.</p>
+<ol>
+<li>Sincronización por <strong>exlusión mutua (mutex)</strong></li>
+<li>Sincronización por <strong>condición (barrier)</strong></li>
+</ol>
+<h3 id="especificación">Especificación</h3>
+<p>🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧
+LEER EN EL LIBRO
+🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧</p>
+<h2 id="propiedades">Propiedades</h2>
+<p>Una propiedad, en un programa concurrente, es un atributo que debe ser cierto en cada historia posible del programa. Existen 2 (dos) grandes categorías, de propiedades.</p>
+<p>La primera, es la de <strong>seguridad (safety)</strong>. La cual, debe asegurar que nada malo ocurra durante la ejecución; para garantizar que el estado final del programa sea el correcto. Dos propiedades fundamentales, dentro de esta categoría, son:</p>
+<ol>
+<li><strong>Exclusión mutua:</strong> El evento negativo, en este caso, sería que 2 (dos) o más programas; accedan a la misma sección crítica en el mismo instante de tiempo.</li>
+<li><strong>Ausencia de deadlock:</strong> El evento negativo, en este caso, sería que un proceso quede demorado, esperando por una condición que nunca será verdadera.</li>
+</ol>
+<p>La segunda, es la de <strong>vida (liveness)</strong>. La cual, debe asegurar que eventualmente algo bueno ocurrirá; para garantizar la correcta terminación del programa. Por ejemplo:</p>
+<ol>
+<li>Que todo proceso,eventualmente, acceda a su sección crítica.</li>
+<li>Que todo mensaje, eventualmente, sea recibido por su receptor.</li>
+</ol>
+<h2 id="scheduling-y-fairness">Scheduling y Fairness</h2>
+<p>La mayoría de las propiedades de vida, de un programa concurrente, dependen del <strong>fairness</strong>. El cual, es un concepto, que se ocupa de garantizar que todos los procesos tienen chances de proceder sin importar lo que hagan los demás.</p>
+<p>Para que los procesos avancen, acciones atómicas candidatas deben ser elegidas para su ejecución. Dicha tarea de selección, es llevada a cabo por una política de planificación (<strong>scheduling policy</strong>). Según la bibliografía, existen 3 (tres) grados de fairness que toda política de planificación debería proveer.</p>
+<p>💡 El programa es ejecutado en una arquitectura monoprocesador.</p>
+<h3 id="fairness-incondicional">Fairness incondicional</h3>
+<p>Una política de planificación cumple con este grado si cada acción atómica, incondicional elegible, eventualmente es ejecutada.</p>
+<pre><code><code><div>var continue = true;
+co  while (continue); (P)
+/   continue = false; (Q)
+oc 
+</div></code></code></pre>
+<p>Una política donde se conceda CPU, a los procesos, hasta que estos terminan o son demorados; no sería incondicionalmente fair. Ya que si (P) ingresa primero entonces, (Q) no tendría oportunidad de ser ejecutada.</p>
+<p>Por el contrario, Round Robin si resulta una política incondicionalmente fair. Ya que, (Q) eventualmente podrá acceder a CPU.</p>
+<h3 id="fairness-débil">Fairness débil</h3>
+<p>Una política de planificación cumple este grado si, es incondicionalmente fair y cada acción atómica condicional eventualmente es ejecutada. Asumiendo que su condición, se volverá verdadera y permanecerá así hasta ser vista por el proceso ejecutando la acción.</p>
+<h3 id="fairness-fuerte">Fairness fuerte</h3>
+<p>Una política de planificación cumple este grado si, es incondicionalmente fair y cada acción atómica condicional eventualmente es ejecutada. Asumiendo que su condición, se volverá verdadera con infinita frecuencia hasta ser vista por el proceso ejecutando la acción.</p>
+<p>⚠️ No es posible idear un planificador que sea práctico y fuertemente fair.</p>
+<h3 id="ejemplo">Ejemplo</h3>
+<p>¿Este programa termina?</p>
+<pre><code><code><div>var continue = true;
+var try = false;
+
+co  while (continue) { try = true; try = false; } (P)
+/   &lt; await(try) continue = false &gt; (Q)
+oc
+</div></code></code></pre>
+<p>Con una política débilmente fair, el programa podría no terminar. Ya que, <code>try</code> no se mantiene verdadera hasta ser vista por (Q).</p>
+<p>Con una política fuertemente fair, el programa podría terminar. Ya que, <code>try</code> se convierte en verdadera con infinita frecuencia.</p>
+
+    </body>
+    </html>
