@@ -1,11 +1,25 @@
 % Preámbulo
-\documentclass[a4paper, 11pt]{book}
+\documentclass[a4paper, 10pt, margin=0in]{report}
 %\setlength{\parskip}{1.5mm}
 
 \usepackage[spanish]{babel}
 \usepackage[utf8x]{inputenc}
 \usepackage{listings}
+\usepackage{titlesec}
+\usepackage{multicol}
+\usepackage{parcolumns}
 
+%== Espacio entre parrafos ==%
+\setlength{\parskip}{0.5em}
+
+%== Margenes del documento a 1 pulgada (inches) ==% 
+\addtolength{\oddsidemargin}{-.875in}
+\addtolength{\evensidemargin}{-.875in}
+\addtolength{\textwidth}{1.75in}
+\addtolength{\topmargin}{-.875in}
+\addtolength{\textheight}{1.75in}
+
+%== Configuracion para bloques de codigo ==%
 \lstset{
     basicstyle=\small\ttfamily,
     showstringspaces=false,
@@ -13,7 +27,10 @@
     fontadjust=true,
     escapechar=§,
     numbers=left,
-    numberstyle=\tiny
+    numberstyle=\tiny,
+    aboveskip=0em,
+    belowskip=0.5em,
+    xleftmargin=3em
 }
 
 % Cuerpo
@@ -28,13 +45,14 @@
 \author{Ramiro Martínez D'Elía}
 \date{2021}
 \maketitle
-\newpage
 
 % Índice
 \tableofcontents
-\newpage
 
 \chapter{Locks y Barriers}
+\vspace*{-10mm}
+
+\section{Introducción}
 
 Los programas concurrentes emplean dos tipos básicos de sincronización: exclusión mutua y sincronización por condición. Este capítulo examina 2 (dos) problemas importantes (secciones críticas y barreras).
 
@@ -101,6 +119,7 @@ Algunas soluciones, como \textbf{\emph{flags and coordinators}}, implementan est
 \end{enumerate}
 
 \chapter{Soluciones con variables compartidas}
+\vspace*{-10mm}
 
 \section*{Introducción}
 
@@ -161,7 +180,7 @@ Los algoritmos \textbf{\emph{Tie breaker}}, \textbf{\emph{Ticket}} y \textbf{\em
 
 Este algoritmo asegura la exclusión mutua mediante dos variables, una por proceso, \emph{in1} e \emph{in2}. En caso de que ambas valgan verdadero (empate) emplea una variable adicional, \emph{last}, para determinar cuál fue el último en ingresar a su sección crítica.
 
-\begin{lstlisting}
+\begin{lstlisting}[multicols=2]
 bool in1, in2 = false;
 int last = 1;
     
@@ -206,18 +225,25 @@ Para esto, obligatoriamente, se requiere de alguna instrucción especial que ent
 \begin{lstlisting}
 int number = 1,
     next = 1; 
-
 int[] turn[n] = ([n] 0);
 
-Process WithFA [i = 1 .. n]
+Process Worker[i = 1..n]
     turn[i] = FA(number, 1);
     while (turns[i] != next) skip;  # Entry
     # Critical Section
     next = next + 1;                # Exit
     # Noncritical Section
 end;
+\end{lstlisting}
 
-Process WithoutFA [i = 1 .. n]
+De no existir una instrucción máquina, de estilo \textbf{\emph{Fetch and Add}}, podemos reemplazarla con otra sección crítica.
+
+\begin{lstlisting}
+int number = 1,
+    next = 1; 
+int[] turn[n] = ([n] 0);
+
+Process Worker[i = 1..n]
     turn[i] = number;               # Reemplazo FA
     < number = number + 1 >         # Reemplazo FA
     while (turns[i] != next) skip;  # Entry
@@ -307,11 +333,11 @@ end;
 
 El algoritmo utiliza \textbf{dos arreglos como flags}; el primero para marcar la llegada de cada proceso a la barrera. Y el segundo, para indicar a cada proceso que puede continuar. Este último arreglo es actualizado por un proceso coordinador.
 
-\begin{lstlisting}
+\begin{lstlisting}[multicols=2]
 int[] arrive[n] = ([n] 0);
 int[] continue[n] = ([n] 0);
 
-Process Worker[i = 1.. ]
+Process Worker[i = 1..n]
     while (true)
         # Realizar tarea
         arrive[i] = 1;
@@ -319,7 +345,6 @@ Process Worker[i = 1.. ]
         continue[i] = 0;
     end;
 end;
-
 Process Coordinator
     while (true)
         for (i = 1 to n)
@@ -350,7 +375,7 @@ Los procesos son organizados en forma de árbol y se procede con la siguiente l�
 
 Cuando el nodo raíz, recibe la señal de llegada de sus hijos se sobreentiende que todos los demás workers también lo hicieron. Así, la raíz envía la señal de continuar a sus hijos y así sucesivamente.
 
-\begin{lstlisting}
+\begin{lstlisting}[multicols=2]
 int[n] arrive = 0;
 int[n] continue = 0;
     
@@ -370,7 +395,8 @@ Process Internal[1..I]
     arrive[I] = 1;
     < await(continue[I] == 1) >
     continue[I] = 0;
-    < continue[left] = 1; continue[right] = 1; >
+    < continue[left] = 1; 
+    continue[right] = 1; >
 End.
     
 Process Root
@@ -380,7 +406,8 @@ Process Root
     arrive[right] = 0;
     # Hacer algo ...
     arrive[R] = 1;
-    < continue[left] = 1; continue[right] = 1; >
+    < continue[left] = 1;
+    continue[right] = 1; >
 End.
 \end{lstlisting}
 
@@ -420,6 +447,7 @@ Otro defecto es la \textbf{\emph{ineficiencia}} de los protocolos de busy waitin
 El concepto de la sincronización es fundamental en los programas concurrentes. Por esto, es deseable tener herramientas especiales para el diseño de protocolos de sincronización correctos (\textbf{\emph{semáforos}} y \textbf{\emph{monitores}}).
 
 \chapter{Soluciones con semáforos}
+\vspace*{-10mm}
 
 Al igual que los semáforos viales sirven para proveer un mecanismo de señalización para prevenir accidentes. En los programas concurrentes, los semáforos sirven para proveer un mecanismo de señalización entre procesos e implementar exclusión mutua y sincronización por condición.
 
@@ -433,23 +461,36 @@ El método \textbf{\emph{p}}, demora al proceso hasta que un evento haya ocurrid
 
 Por último, el \textbf{\emph{contador}} es una variable que sólo toma valores enteros positivos.
 
+
+
+\begin{multicols}{2}
+
+    %== Multicols no soporta table ... ==%
+    {\renewcommand{\arraystretch}{2}%
+    \centering
+    \begin{tabular}{cc}
+        \textbf{Tipo de semáforo} & \textbf{Valores del contador}\\
+        \hline 
+        Binario & Entre 0 y 1\\ 
+        General & Entre 0 y $\infty$\\ 
+    \end{tabular}}
+
 \begin{lstlisting}
 sem s;
+
 P(s): < await(s > 0) s = s - 1; >
+
 V(s): < s = s + 1; >
 \end{lstlisting}
 
-\begin{table}
-\begin{tabular}{lllll} 
-\hline
-Tipo de semáforo & Valores posibles del contador \\ 
-\hline
-Binario & Entre 0 y 1 \\ 
-\hline
-Binario & Entre 0 y $\infty$ \\ 
-\hline
-\end{tabular}
-\end{table}
+\columnbreak
+
+
+    
+\end{multicols}
+
+
+
 
 \subsection{Para secciones críticas}
 
@@ -479,7 +520,7 @@ Dado un programa donde los procesos se comunican, entre sí, mediante un \textbf
 
 La forma más sencilla de sincronizar a los procesos es; utilizar semáforos en terminos de los estados posibles del búffer; \emph{empty} y \emph{full}. Juntos, \emph{empty} y \emph{full}, conforman un split binary semaphore que; proveerá exclusión mutua sobre el acceso del búffer.
 
-\begin{lstlisting}
+\begin{lstlisting}[multicols=2]
 sem empty = 1, full = 0;
 any buffer;
 
@@ -510,9 +551,9 @@ Dado un programa donde los procesos se comunican, entre sí, mediante un \textbf
 
 En este caso, el recurso son los espacios libres del buffer. Como adición, se debe aplicar exclusión mutua para que distintos consumidores no recuperen el mismo mensaje (mantener consitente \emph{front}) y para, que los productores no sobreescriban mensajes (mantener consistente \emph{near}).
 
-\begin{lstlisting}
+\begin{lstlisting}[multicols=2]
 
-    int front, rear = 0;
+int front, rear = 0;
 sem empty = n, full = 0;
 sem mutexFetch = 1, mutexDeposit = 1;
 array[n] buffer; 
@@ -550,7 +591,7 @@ Por ejemplo: cinco filósofos se sientan a comer en una mesa redonda donde hay s
 El problema de exclusión mutua selectiva se da entre cada par de filósofos y un tenedor. Tener en cuenta, de que si fuesen 3 filósofos, no sería un problema de exclusión mutua.
 
 
-\begin{lstlisting}
+\begin{lstlisting}[multicols=2]
 sem forks[5] = {0,0,0,0,0}
 
 Process Philosopher[i = 0 to 3]
@@ -580,7 +621,7 @@ Otro ejemplo, de exclusión mutua selectiva, donde clases de procesos, compiten 
 
 El siguiente algoritmo, resuelve el problema implementando exclusión mutua básica. No obstante, esta solución no es fair. Ya que, prioriza lectores por sobre escritores.
 
-\begin{lstlisting}
+\begin{lstlisting} [multicols=2]
 int nr = 0; # lectores activos
 sem rw = 1; # acceso a bbdd
 sem mutexR = 1; # acceso a nr
@@ -592,6 +633,7 @@ Process Writer
         V(rw);
     end;
 end;
+
 
 Process Reader
     while (true)
@@ -608,7 +650,7 @@ Process Reader
 end;
 \end{lstlisting}
 
-\section{Passing the batton}
+\section{Passing the Baton}
 
 Técnica que utiliza \textbf{\emph{split binary semaphores}} para proveer exclusión mutua y despertar procesos demorados (incluso respetando su orden). Empleando esta técnica, podremos \textbf{\emph{especificar sentencias await arbitrarias}}. Su implementación, respeta la siguiente forma:
 
