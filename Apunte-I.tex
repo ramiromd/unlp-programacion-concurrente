@@ -1,0 +1,327 @@
+\documentclass[a4paper, 10pt]{report}
+\usepackage{common}
+
+% Cuerpo
+\begin{document}
+
+% Carátula
+\title{
+    I\\
+    Programación Concurrente\\
+    \large Clases 1 y 2: Conceptos básicos. Comunicación y sincronización. Interferencia.
+}
+
+\author{Ramiro Martínez D'Elía}
+\date{2021}
+\maketitle
+
+% Índice
+\tableofcontents
+
+\chapter{Programa concurrente}
+
+\section{Definición}
+
+La \textbf{\emph{concurrencia}} es la capacidad de ejecutar múltiples actividades de forma simultánea. Un \textbf{\emph{programa concurrente}}, en consecuencia, es la especificación de uno o más programas secuenciales que pueden ejecutarse de forma concurrente como procesos o tareas.
+
+\section{Estados, acciones e historias}
+
+El \textbf{\emph{estado}}, de un programa concurrente, consiste en los valores de las variables del programa en un instante de tiempo dado. Pudiendo ser, variables explícitas (las definidas por el programador) como variables implícitas (program counter, stack pointer, etc ...).
+
+La ejecución, del programa concurrente, puede ser vista como el intercalado de secuencias de \textbf{\emph{acciones atómicas}} ejecutadas por cada proceso. Así, cada ejecución particular del programa puede ser vista como una \textbf{\emph{historia (trace)}}: $s_1 \rightarrow s_2 \rightarrow ... s_n$.
+
+Cada ejecución de un programa concurrente, produce una historia. Inclusive, hasta en los programas más triviales, el número de historias posibles puede ser enorme. Por ejemplo; para el siguiente programa existen 2 (dos) historias posibles: 
+
+\begin{multicols}{2}
+
+\begin{lstlisting}
+int x = 5;      # (a)
+
+co x = 0;       # (b)
+/  x = x + 1;   # (c)
+oc;
+\end{lstlisting}
+\columnbreak
+    %== Multicols no soporta table ... ==%
+    {\renewcommand{\arraystretch}{2}%
+    \centering
+    \begin{tabular}{cc}
+        \textbf{Trace} & \textbf{Resultado}\\
+        \hline 
+        $A \rightarrow B \rightarrow C$ & \emph{X = 1}\\ 
+        $A \rightarrow C \rightarrow B$ & \emph{X = 0}\\ 
+    \end{tabular}}
+\end{multicols}
+
+\section{Acciones atómicas}
+
+Una \textbf{\emph{acción atómica}}, es una acción que realiza un cambio de estado indivisible. Esto significa que, cualquier estado intermedio que pueda existir en la implementación de la acción no debe ser visible a los otros procesos.
+
+Las acciones atómicas, pueden ser \textbf{\emph{condicionales}} o \textbf{\emph{incondicionales}}. Según tengan, o no, una condición de guarda B que demore su ejecución hasta que la misma sea verdadera.
+
+Una \textbf{\emph{acción atómica de grano fino}}, es aquella implementada por el hardware (CPU) en el cual el programa concurrente es ejecutado.
+
+En un programa secuencial, las sentencias de asignación parecen ser atómicas. Esto es porque ningún estado intermedio es visible al programa. En los programas concurrentes, no se puede afirmar lo mismo. Una sentencia de asignación, puede estar implementada por una secuencia de instrucciones máquina. Por ejemplo, para el siguiente programa.
+
+\begin{multicols}{3}
+\begin{lstlisting}
+int x = 2,
+    y = 2;
+
+co  z = x + y;      # (1)
+/   x = 3; y = 4;   # (2)
+oc
+\end{lstlisting}
+\columnbreak
+\begin{lstlisting}
+# Proceso (1)
+Load    PosMemX, Temp;
+Add     PosMemY, Temp;
+Store   Temp, PosMemZ
+
+# Proceso (2)
+Store   3, PosMemX;
+Store   4, PosMemY;
+\end{lstlisting}
+\columnbreak
+    %== Multicols no soporta table ... ==%
+    {\renewcommand{\arraystretch}{1.5}%
+    \centering
+    \begin{tabular}{cc}
+        \textbf{Variable} & \textbf{Valor final}\\
+        \hline 
+        x & 3\\ 
+        y & 4\\ 
+        z & 4, 5, 6, ó 7\\
+    \end{tabular}}
+\end{multicols}
+
+
+La cantidad de valores posibles, para z, se debe a que; en algunas historias el proceso (2) invalidó las suposiciones realizadas por (1). Por ejemplo, si:
+
+\centerline{$(1)_2 \rightarrow (2)_7 \rightarrow (1)_3 \rightarrow (1)_4 \rightarrow (2)_8 \Rightarrow z = 4$}
+
+La suposición, en este caso, fue que el proceso (1) realizó la suma con \emph{x = 2}. La cual quedó invalidada, cuando el proceso (2) realizó \emph{x = 3}. 
+
+Ese evento, negativo, es conocido como \textbf{\emph{interferencia}}. El cual se produce, cuando un proceso toma una acción que invalida las suposiciones hechas por otro proceso. Técnicas para evitar la interferencia, pueden ser:
+
+\begin{itemize}
+    \item Variables disjuntas (disjoint variables)
+    \item Afirmaciones debilitadas (weakened assertions)
+    \item Invariantes globales (global invariants)
+    \item Sincronización (synchronization)
+\end{itemize}
+
+\section{Propiedad de ASV}
+
+Una forma de detectar que una sentencia no posee interferencias y, por consiguiente, su ejecución parecerá atómica es verificar que la misma posea, a lo sumo, una referencia crítica.
+
+Una \textbf{\emph{referencia crítica}}, en una expresión, es la referencia a una variable que es modificada por otro proceso. Toda expresión que contenga a lo sumo una referencia crítica, cumple con la \textbf{\emph{propiedad de a lo sumo una vez}} y su ejecución parecerá atómica.
+
+Por ejemplo, la sentencia de asignación \textbf{\emph{x = expr}} satisface la propiedad si se cumple alguna de las siguientes condiciones:
+
+\begin{enumerate}
+    \item Si \textbf{\emph{expr}} contiene a lo sumo una referencia crítica, en cuyo caso \textbf{\emph{x}} no podrá ser leída por otro proceso.
+    \item Si \textbf{\emph{expr}} no contiene referencias críticas, en cuyo caso \textbf{\emph{x}} podrá ser leída por otro proceso.
+\end{enumerate}
+
+\begin{multicols}{4}
+%== Multicols no soporta table ... ==%
+{\renewcommand{\arraystretch}{1.7}%
+\centering
+\begin{tabular}{cc}
+    \textbf{Program} & \textbf{Cumple}\\
+    \hline 
+    Uno & Si\\ 
+    Dos & Si\\ 
+    Tres & No\\
+\end{tabular}}
+\columnbreak
+\begin{lstlisting}
+Program Uno
+int x = 0,
+    y = 0;
+co  x = x + 1;
+/   y = y + 1;
+oc
+End.
+\end{lstlisting}
+\columnbreak
+\begin{lstlisting}
+Program Dos
+int x = 0,
+    y = 0;
+co  x = y + 1;
+/   y = y + 1;
+oc
+End.
+\end{lstlisting}
+\columnbreak
+\begin{lstlisting}
+Program Tres
+int x = 0,
+    y = 0;
+co  x = y + 1;
+/   y = x + 1;
+oc
+End.
+\end{lstlisting}
+\end{multicols}
+
+\section{Sentencia Await}
+
+Si una expresión o sentencia de asignación, no cumplen con la propiedad ASV será necesario que la ejecutemos de forma atómica. Aunque, en general, necesitaremos ejecutar secuencias de instrucciones como una única acción atómica.
+
+En ambos casos, necesitaremos utilizar algún mecanismo de sincronización que nos permita construir \textbf{\emph{acciones atómicas de grano grueso}}. Las cuales, no son más que una secuencia de acciones atómicas de grano fino que parecen ser indivisibles.
+
+Podemos especificar acciones atómicas, a través de parentesis angulares \textbf{\emph{$\langle$}} y \textbf{\emph{$\rangle$}}. Como también, especificar sincronización a través de la sentencia \textbf{\emph{await}}:
+
+\begin{lstlisting}
+<await(B) S;>
+\end{lstlisting}
+
+\begin{itemize}
+    \item B es una condición booleana que, especifica una condición de demora.
+    \item S es un conjunto de setencias que eventualmente terminarán, y que su estado interno no será visible por otros procesos.
+\end{itemize}
+
+Por ejemplo, en el siguiente programa; \emph{B} demora hasta que \emph{x} contenga un valor positivo entonces, decrementa \emph{x}.
+
+\begin{lstlisting}
+<await(x > 0) a = x-1;>
+\end{lstlisting}
+
+Con la sentencia \textbf{\emph{await}} podemos construir acciones atómicas de grano grueso arbitrarias. Por ejemplo, el programa anterior es un ejemplo de la operación P de un semáforo a. No obstante, es complejo implementar esta sentencia en su forma general.
+
+La forma general del \textbf{\emph{await}} especifica ambas formas de sincronización (\textbf{\emph{exlusión mutua}} y \textbf{\emph{por condicón}}). No obstante podemos utilizar su abreviación para, especificarlas por separado.
+
+Para especificar sincronización por \textbf{\emph{exlusión mutua}} podemos emplear \textbf{\emph{$\langle$ s $\rangle$}}. El siguiente ejemplo, incrementa a \emph{x} e \emph{y} de forma atómica:
+
+\begin{lstlisting}
+<x = x + 1; y = y + 1;>
+\end{lstlisting}
+
+La acción anterior, es una \textbf{\emph{acción atómica incondicional}}. Ya que; no posee una guarda.
+
+Para especificar sincronización por \textbf{\emph{por condicón}}, podemos emplear \textbf{\emph{$\langle$ B $\rangle$}}. El siguiente ejemplo, demora la ejecución del proceso hasta que \emph{count $>$ 0}:
+
+\begin{lstlisting}
+<await(count > 0)>
+\end{lstlisting}
+    
+
+La acción anterior, es una \textbf{\emph{acción atómica condicional}}. Ya que; posee una guarda.
+
+Por último, si la condicón de guarda satisface ASV. Podremos implementar el \textbf{\emph{await}} mediante \textbf{\emph{busy waiting}} o \textbf{\emph{spin loops}}.
+
+\begin{multicols}{2}
+\begin{lstlisting}
+BusyWaiting
+    do (not B)
+        skip;
+    od
+End.
+\end{lstlisting}
+\columnbreak
+\begin{lstlisting}
+SpinLoop
+    while (not B);
+End.
+\end{lstlisting}
+\end{multicols}
+
+\subsection{Ejemplo Productores/Consumidores}
+
+Sea el problema de procesos que producen y consumen datos, en un búffer con capacidad para \emph{n} elementos. Donde, existen las siguientes restricciones:
+
+\begin{itemize}
+    \item El productor podrá colocar datos, siempre y cuando la cola no este llena (condición).
+    \item El consumidor podrá leer datos, siempre y cuando la cola no este vacía (condición).
+    \item El acceso, al búffer, debe ser atómico para evitar inconsitencias (mutex).
+\end{itemize}
+
+\begin{lstlisting}
+int size = 0;
+Queue queue;
+    
+Process Productor
+    while(true)
+        <await(size < N) queue.push(dato)>
+    end;
+End.
+
+Process Consumidor
+    while(true)
+        <await(size > 0) queue.pop(dato); size--;>
+    end;
+End.
+\end{lstlisting}
+
+\section{Propiedades}
+
+Una propiedad, en un programa concurrente, es un atributo que debe ser cierto en cada historia posible del programa. Existen 2 (dos) grandes categorías, de propiedades.
+
+La primera, es la de \textbf{\emph{seguridad (safety)}}. La cual, debe asegurar que nada malo ocurra durante la ejecución; para garantizar que el correcto estado final del programa. Dos propiedades fundamentales, dentro de esta categoría, son:
+
+\begin{enumerate}
+    \item \textbf{\emph{Exclusión mutua}}: El evento negativo, en este caso, sería que 2 (dos) o más programas; accedan a la misma sección crítica en el mismo instante de tiempo.
+    \item \textbf{\emph{Ausencia de deadlock}}: El evento negativo, en este caso, sería que un proceso quede demorado, esperando por una condición que nunca será verdadera. 
+\end{enumerate}
+
+La segunda, es la de \textbf{\emph{vida (liveness)}}. La cual, debe asegurar que eventualmente algo bueno ocurrirá; para garantizar la correcta terminación del programa. Por ejemplo:
+
+\begin{enumerate}
+    \item Que todo mensaje, eventualmente, sea recibido por su receptor.
+    \item Que todo proceso, eventualmente, acceda a su sección crítica.
+\end{enumerate}
+
+\section{Scheduling y Fairness}
+
+La mayoría de las propiedades de vida, de un programa concurrente, dependen del \textbf{\emph{fairness}}. El cual, es un concepto, que se ocupa de garantizar que todos los procesos tienen chances de proceder sin importar lo que hagan los demás.
+
+Para que los procesos avancen, acciones atómicas candidatas deben ser elegidas para su ejecución. Dicha tarea de selección, es llevada a cabo por una política de planificación (\textbf{\emph{scheduling policy}}). Según la bibliografía, existen 3 (tres) grados de fairness que toda política de planificación debería proveer.
+
+\subsection{Incondicionalmente Fair}
+
+Una política de planificación cumple con este grado si cada acción atómica, incondicional elegible, eventualmente es ejecutada. Por ejemplo, para el siguiente programa:
+
+\begin{lstlisting}
+var continue = true;
+co  while (continue); (P)
+/   continue = false; (Q)
+oc
+\end{lstlisting}
+
+
+Una política donde se conceda CPU, a los procesos, hasta que estos terminan o son demorados; no sería incondicionalmente fair. Ya que si (P) ingresa primero entonces, (Q) no tendría oportunidad de ser ejecutada.
+
+Por el contrario, Round Robin si resulta una política incondicionalmente fair. Ya que, (Q) eventualmente podrá acceder a CPU.
+
+\subsection{Débilmente Fair}
+
+Una política de planificación cumple este grado si, es incondicionalmente fair y cada acción atómica condicional eventualmente es ejecutada. Asumiendo que su condición, se volverá verdadera y permanecerá así hasta ser vista por el proceso ejecutando la acción.
+
+\subsection{Fuertemente Fair}
+
+Una política de planificación cumple este grado si, es incondicionalmente fair y cada acción atómica condicional eventualmente es ejecutada. Asumiendo que su condición, se volverá verdadera con infinita frecuencia hasta ser vista por el proceso ejecutando la acción.
+
+Nota: No es posible idear un planificador que sea práctico y fuertemente fair.
+
+\subsection{Ejercicio}
+
+¿El siguiente programa finaliza?
+
+\begin{lstlisting}
+bool continue = true;
+bool try = false;
+
+co  while (continue) { try = true; try = false; } (P)
+/   <await(try) continue = false> (Q)
+oc
+\end{lstlisting}
+
+Con una política débilmente fair, el programa podría no terminar. Ya que, \emph{try} no se mantiene verdadera hasta ser vista por Q.
+
+Con una política fuertemente fair, el programa podría terminar. Ya que, \emph{try} se convierte en verdadera con infinita frecuencia.
+
+\end{document}
