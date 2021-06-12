@@ -1,0 +1,113 @@
+\documentclass[a4paper, 10pt]{report}
+\usepackage{common}
+
+\begin{document}
+    
+% Carátula
+\title{
+    \faIcon[regular]{gem}\\
+    Programación Concurrente\\
+    \large Preguntas de final
+}
+
+\author{Ramiro Martínez D'Elía}
+\date{2021}
+\maketitle
+
+{\large \textbf{Implemente una solución, paralela, al problema de multiplicación de matrices de $n*n$ con $P<n$}}
+
+Si el número de procesos es menor que \emph{n}, no podremos asignar una fila a cada proceso. En su lugar, debemos hacer que cada proceso trabaje con una porción (\emph{strpe}) del arreglo.
+
+\begin{lstlisting}
+Process[w = 1..P]
+
+# El proceso w, procesara las filas first a last
+int first = (w-1) * (n/p) + 1;
+int last = first + n/p - 1;
+
+for(a_row = first to last)
+
+    for [b_col = 1 to n]
+        # Inicializamos la celda acumuladora de C.
+        c[a_row, b_col] = 0;
+
+        # Iteramos entre las columnas (A) y filas (B) de interes.
+        for [k = 1 to n]
+            c[a_row, b_col] = c[a_row, b_col] + (a[a_row, k] * b[k, b_row]);
+end;
+End;
+\end{lstlisting}
+
+\textbf{(a) Suponga n=128 y que cada procesador es capaz de ejecutar un proceso. ¿Cuántas asignaciones, sumas y productos se hacen secuencialmente (caso en el que P=1)?}
+
+\begin{itemize}
+    \item En este caso $strip \rightarrow n$
+    \item Línea 11: Hace tantas pasadas como columnas tenga B ($n$) por el tamaño del strip $\rightarrow n^2$
+    \item Línea 15: Hace $n$ pasadas por tantas pasadas como columnas tenga B por el tamaño del strip $\rightarrow n^3$
+\end{itemize}
+
+$Asignaciones = n^3 + n^2 = 128^3 + 128^2 = 2097152 + 16384 = 2113536$
+
+$Sumas = n^3 = 128^3 = 2097152$
+
+$Productos = n^3 = 128^3 = 2097152$
+
+
+\textbf{(b) Manteniendo n=128. Si los procesadores P1 a P7 son iguales, y sus tiempos de asignación son 1, de suma 2 y de producto 3, y si
+P8 es 4 veces más lento, ¿Cuánto tarda el proceso total concurrente? ¿Cuál es el valor del speedup (Tiempo
+secuencial/Tiempo paralelo)?. Modifique el código para lograr un mejor speedup.}
+
+\begin{itemize}
+    \item En este caso $strip = n/p = 128/8 = 16$
+\end{itemize}
+
+$Asignaciones = n^2 \times 16 + n \times 16 = 128^2 \times 16 + 128 \times 16 = 262144 + 2048 = 264192$
+
+$Sumas = n^2 \times 16 = 128^2 \times 16 = 262144$
+
+$Productos = n^2 \times 16 = 128^2 \times 16 = 262144$
+
+Los procesos 1 a 7, tardaran lo mismo:
+
+$264192 \times 1 ut + 262144 \times 2 ut + 262144 \times 3 ut = 1574912 ut$
+
+El proceso 8, es 4 veces más lento que el resto. Por lo cual, tardará 4 veces más:
+
+$1574912 ut \times 4 = 6299648 ut$
+
+Por consiguiente, el proceso concurrente tardará $6299648 ut$ en finalizar. Ya que, el proceso 8 será el último, en terminar su trabajo.
+
+Con las unidades de tiempo, de los procesadores más eficientes, el proceso secuencial tardará:
+
+$2113536 \times 1 ut + 2097152 \times 2 ut + 2097152 \times 3 = 12599296 ut$
+
+Por consiguiente el Speedup obtenido será de 2.
+
+Para mejorar el Speedup podríamos balancear la carga de trabajo, de los procesadores, de manera distinta. Por ejemplo; haciendo que el procesador 8, el más lento, trabaje sobre un strip más pequeño.
+
+\begin{itemize}
+    \item Múltiplo de 7 más cercano a 128 $\rightarrow 126$
+    \item Tamaño del stripe, para el procesador 8 $\rightarrow 128 - 126 = 2$
+    \item Tamaño del stripe, para el resto de los procesadores $\rightarrow 126/7 = 18$
+\end{itemize}
+
+Asignaciones P$_{8} = 128^2 \times 2 + 128 \times 2 = 33024$
+
+Sumas P$_{8} = 128^2 \times 2 = 32768$
+
+Productos P$_{8} = 128^2 \times 2 = 32768$
+
+Tiempo P$_8$ $= 33024 \times 1 ut + 32768 \times 2 ut + 32768 \times 3 = 196864 ut$
+
+Asignaciones P$_{resto} = 128^2 \times 18 + 128 \times 18 = 297216$
+
+Sumas P$_{resto} = 128^2 \times 18 = 294912$
+
+Productos P$_{resto} = 128^2 \times 2 = 294912$
+
+Tiempo P$_{resto}= 297216 \times 1 ut + 294912 \times 2 ut + 294912 \times 3 = 1771776 ut$
+
+Con estos nuevos tiempos el speedup será de 7,1.
+
+
+\end{document}
