@@ -6,6 +6,9 @@
 \usepackage{multicol}
 \usepackage{parcolumns}
 \usepackage{pgfgantt}
+\usepackage{amsmath}
+\usepackage{fontawesome5}
+\usepackage[most]{tcolorbox}
 
 %== Espacio entre parrafos ==%
 \setlength{\parskip}{0.5em}
@@ -29,4 +32,13 @@
     aboveskip=0em,
     belowskip=0.5em,
     xleftmargin=3em
+}
+
+\newtcolorbox{basic_box}[1][]{
+  enhanced,
+  arc=0pt,
+  outer arc=0pt,
+  colback=white,
+  boxrule=0.5pt,
+  #1
 }

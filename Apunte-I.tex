@@ -66,6 +66,98 @@ La \textbf{\emph{concurrencia}} es la capacidad de ejecutar múltiples actividad
 \end{ganttchart}
 \end{multicols}
 
+\section{Patrones de resolución}
+
+\subsection{Paralelismo iterativo}
+
+En el \textbf{\emph{paralelismo iterativo}} un programa consta de un conjunto de procesos, posiblemente idénticos, que cooperarán para resolver un único problema. Donde cada proceso es un algoritmo iterativo que, trabaja sobre un subconjunto de datos del problema.
+
+\textbf{Multiplicación de matrices (por filas)}
+
+\begin{equation}
+    C_{1,1} = A_{1,n} x B_{n,1} = A_{1,1} x B_{1,1} + A_{1,2} x B_{2,1} + A_{1,3} x B_{3,1}
+\end{equation}
+
+\begin{equation}
+    C_{1,2} = A_{1,n} x B_{n,2} = A_{1,1} x B_{1,2} + A_{1,2} x B_{2,2} + A_{1,3} x B_{3,2}
+\end{equation}
+
+\begin{equation}
+A\begin{bmatrix}
+a_{1,1} & a_{1,2} & a_{1,3}\\
+a_{2,1} & a_{2,2} & a_{2,3}\\
+a_{3,1} & a_{3,2} & a_{3,3}
+\end{bmatrix}
+x
+B\begin{bmatrix}
+b_{1,1} & b_{1,2} & b_{1,3}\\
+b_{2,1} & b_{2,2} & b_{2,3}\\
+b_{3,1} & b_{3,2} & b_{3,3}
+\end{bmatrix}
+=
+C\begin{bmatrix}
+c_{1,1} & c_{1,2} & c_{1,3}\\
+c_{2,1} & c_{2,2} & c_{2,3}\\
+c_{3,1} & c_{3,2} & c_{3,3}
+\end{bmatrix}
+\end{equation}
+
+
+\begin{lstlisting}
+double  a[n,n],
+        b[n,n],
+        c[n,n];     # Matriz resultante.
+
+# Lanzamos 1 proceso por cada fila de A.
+co  [a_row = 1 to n]
+
+    # Iteramos sobre las columnas de B
+    # En funcion del proceso id:a_row
+    for [b_col = 1 to n]
+        
+        # Inicializamos la celda acumuladora de C.
+        c[a_row, b_col] = 0;
+
+        # Iteramos entre las columnas (A) y filas (B) de interes.
+        for [k = 1 to n]
+            c[a_row, b_col] += a[a_row, k] * b[k, b_row];
+    end;
+oc 
+\end{lstlisting}
+
+
+\begin{basic_box}
+\faIcon[regular]{gem} ¿Qué pasaría si, hay menos de \emph{n} procesadores? (Ver apunte de Gemas)
+\end{basic_box}
+
+
+
+\subsection{Paralelismo recursivo}
+
+En este patrón, el programa puede descomponerse en procesos recursivos que trabajan sobre partes del conjunto total de datos. Es un claro ejemplo de la metodología \textbf{\emph{divide y conqueror}}.
+Por ejemplo, problema del viajante.
+
+\subsection{Productores y consumidores}
+
+En este patrón, se observan procesos que se comunican. Unos produciendo información y, los otros, consumiendo dicha información. Es común, organizar los procesos en forma de tubería (pipe); a través de la cual fluye la información.
+Por ejemplo, aplicar filtros sobre imágenes.
+
+\begin{basic_box}
+    \faIcon[regular]{gem} ¿Podemos ordenar un vector utilizando este patrón? (Ver apunte de Gemas)
+\end{basic_box}
+
+\subsection{Clientes y servidores}
+
+En este patrón, existen procesos que; realizan pedidos y esperan por una respuesta (clientes) y, otros procesos que, esperan pedidos para procesar (servidores.)
+
+Este tipo de soluciones, predominan en aplicaciones distribuidas.
+
+\subsection{Pares que interactúan}
+
+En este esquema los procesos, posiblemente idénticos, resuelven parte del problema y se comunican para avanzar en la tarea y completar el objetivo.
+
+Similar al iterativo pero, requiere de sincronización por condición (barriers) entre pares.
+
 
 \section{Estados, acciones e historias}
 
@@ -300,6 +392,10 @@ Process Consumidor
 End.
 \end{lstlisting}
 
+\begin{basic_box}
+    \faIcon[regular]{gem} ¿Qué pasaría si, en lugar de una cola fuese un arreglo? (Ver apunte de Gemas)
+\end{basic_box}
+
 \section{Propiedades}
 
 Una propiedad, en un programa concurrente, es un atributo que debe ser cierto en cada historia posible del programa. Existen 2 (dos) grandes categorías, de propiedades.
@@ -323,6 +419,20 @@ La segunda, es la de \textbf{\emph{vida (liveness)}}. La cual, debe asegurar que
 La mayoría de las propiedades de vida, de un programa concurrente, dependen del \textbf{\emph{fairness}}. El cual, es un concepto, que se ocupa de garantizar que todos los procesos tienen chances de proceder sin importar lo que hagan los demás.
 
 Para que los procesos avancen, acciones atómicas candidatas deben ser elegidas para su ejecución. Dicha tarea de selección, es llevada a cabo por una política de planificación (\textbf{\emph{scheduling policy}}). Según la bibliografía, existen 3 (tres) grados de fairness que toda política de planificación debería proveer.
+
+\begin{basic_box}
+    \faIcon[regular]{gem} ¿El siguiente programa, finaliza? (Ver apunte de Gemas)
+
+    \begin{lstlisting}
+        bool continue = true;
+        bool try = false;
+        
+        co  while (continue) { try = true; try = false; } (P)
+        /   <await(try) continue = false> (Q)
+        oc
+    \end{lstlisting}
+
+\end{basic_box}
 
 \subsection{Incondicionalmente Fair}
 
@@ -349,22 +459,5 @@ Una política de planificación cumple este grado si, es incondicionalmente fair
 Una política de planificación cumple este grado si, es incondicionalmente fair y cada acción atómica condicional eventualmente es ejecutada. Asumiendo que su condición, se volverá verdadera con infinita frecuencia hasta ser vista por el proceso ejecutando la acción.
 
 Nota: No es posible idear un planificador que sea práctico y fuertemente fair.
-
-\subsection{Ejercicio}
-
-¿El siguiente programa finaliza?
-
-\begin{lstlisting}
-bool continue = true;
-bool try = false;
-
-co  while (continue) { try = true; try = false; } (P)
-/   <await(try) continue = false> (Q)
-oc
-\end{lstlisting}
-
-Con una política débilmente fair, el programa podría no terminar. Ya que, \emph{try} no se mantiene verdadera hasta ser vista por Q.
-
-Con una política fuertemente fair, el programa podría terminar. Ya que, \emph{try} se convierte en verdadera con infinita frecuencia.
 
 \end{document}
