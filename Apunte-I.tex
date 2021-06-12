@@ -22,7 +22,50 @@
 
 \section{Definición}
 
-La \textbf{\emph{concurrencia}} es la capacidad de ejecutar múltiples actividades de forma simultánea. Un \textbf{\emph{programa concurrente}}, en consecuencia, es la especificación de uno o más programas secuenciales que pueden ejecutarse de forma concurrente como procesos o tareas.
+La \textbf{\emph{concurrencia}} es la capacidad de ejecutar múltiples actividades de forma simultánea. Un \textbf{\emph{programa concurrente}}, en consecuencia, es la especificación de uno o más programas secuenciales que pueden ejecutarse de forma concurrente como procesos o tareas. Vale aclarar que, la concurrencia no implica paralelismo.
+
+\begin{multicols}{2}
+\textbf{\emph{Concurrencia interleaved}}
+\begin{itemize}
+    \item Procesamiento simultáneo lógicamente.
+    \item Ejecución intercalada en un único CPU.
+    \item Pseudo paralelismo.
+\end{itemize}
+
+\textbf{\emph{Concurrencia simultánea}}
+\begin{itemize}
+    \item Procesamiento simultáneo físicamente.
+    \item Ejecución en múltiples CPU.
+    \item Paralelismo full.
+\end{itemize}
+
+\columnbreak
+
+    \begin{ganttchart}[
+        canvas/.append style={
+            fill=none,
+            draw=none,
+        }
+    ]{1}{14}
+    
+        \ganttbar{P}{5}{6} \ganttbar{}{12}{13}\\
+        \ganttbar{Q}{2}{4} \ganttbar{}{10}{11}\\
+        \ganttbar{R}{7}{9}
+    \end{ganttchart}
+
+    \begin{ganttchart}[
+        canvas/.append style={
+            fill=none,
+            draw=none,
+        }
+    ]{1}{14}
+    
+        \ganttbar{P}{2}{4}\\
+        \ganttbar{Q}{2}{4}\\
+        \ganttbar{R}{2}{4}
+    \end{ganttchart}
+\end{multicols}
+
 
 \section{Estados, acciones e historias}
 
