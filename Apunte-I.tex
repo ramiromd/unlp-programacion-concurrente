@@ -41,29 +41,29 @@ La \textbf{\emph{concurrencia}} es la capacidad de ejecutar múltiples actividad
 
 \columnbreak
 
-    \begin{ganttchart}[
-        canvas/.append style={
-            fill=none,
-            draw=none,
-        }
-    ]{1}{14}
-    
-        \ganttbar{P}{5}{6} \ganttbar{}{12}{13}\\
-        \ganttbar{Q}{2}{4} \ganttbar{}{10}{11}\\
-        \ganttbar{R}{7}{9}
-    \end{ganttchart}
+\begin{ganttchart}[
+    canvas/.append style={
+        fill=none,
+        draw=none,
+    }
+]{1}{14}
 
-    \begin{ganttchart}[
-        canvas/.append style={
-            fill=none,
-            draw=none,
-        }
-    ]{1}{14}
-    
-        \ganttbar{P}{2}{4}\\
-        \ganttbar{Q}{2}{4}\\
-        \ganttbar{R}{2}{4}
-    \end{ganttchart}
+    \ganttbar{P}{5}{6} \ganttbar{}{12}{13}\\
+    \ganttbar{Q}{2}{4} \ganttbar{}{10}{11}\\
+    \ganttbar{R}{7}{9}
+\end{ganttchart}
+
+\begin{ganttchart}[
+    canvas/.append style={
+        fill=none,
+        draw=none,
+    }
+]{1}{14}
+
+    \ganttbar{P}{2}{4}\\
+    \ganttbar{Q}{2}{4}\\
+    \ganttbar{R}{2}{4}
+\end{ganttchart}
 \end{multicols}
 
 
