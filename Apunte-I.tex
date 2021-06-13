@@ -68,9 +68,24 @@ La \textbf{\emph{concurrencia}} es la capacidad de ejecutar múltiples actividad
 
 \section{Patrones de resolución}
 
+\subsection{Introducción}
+
+Al igual que con los programas secuenciales, puede existir un gran número de soluciones concurrentes. No obstante, todas siguen los mismos patrones de diseño.
+
+Antes de abordar los patrones de resolución, o diseño, clasificaremos a los procesos de un programa concurrente de la siguiente forma.
+
+\begin{itemize}
+    \item \textbf{Peer (par)}: Proceso, posiblemente, identico al resto.
+    \item \textbf{Filter (filtro)}: Proceso donde su entrada de datos está conectada a la salida de otro.
+    \item \textbf{Client (cliente)}: Proceso que realiza solicitudes, o peticiones, y aguarda por su respectiva respuesta.
+    \item \textbf{Server (servidor)}: Proceso que espera peticiones, y envia respuestas en función de las solicitudes recibidas.
+\end{itemize}
+
 \subsection{Paralelismo iterativo}
 
 En el \textbf{\emph{paralelismo iterativo}} un programa consta de un conjunto de procesos, posiblemente idénticos, que cooperarán para resolver un único problema. Donde cada proceso es un algoritmo iterativo que, trabaja sobre un subconjunto de datos del problema.
+
+Tipos de procesos, que encontramos, en este patrón: \textbf{\emph{peers}}.
 
 \textbf{Multiplicación de matrices (por filas)}
 
@@ -125,7 +140,6 @@ co  [a_row = 1 to n]
 oc 
 \end{lstlisting}
 
-
 \begin{basic_box}
 \faIcon[regular]{gem} ¿Qué pasaría si, hay menos de \emph{n} procesadores? (Ver apunte de Gemas)
 \end{basic_box}
@@ -137,10 +151,14 @@ oc
 En este patrón, el programa puede descomponerse en procesos recursivos que trabajan sobre partes del conjunto total de datos. Es un claro ejemplo de la metodología \textbf{\emph{divide y conqueror}}.
 Por ejemplo, problema del viajante.
 
+Tipos de procesos, que encontramos, en este patrón: \textbf{\emph{peers}}.
+
 \subsection{Productores y consumidores}
 
 En este patrón, se observan procesos que se comunican. Unos produciendo información y, los otros, consumiendo dicha información. Es común, organizar los procesos en forma de tubería (pipe); a través de la cual fluye la información.
 Por ejemplo, aplicar filtros sobre imágenes.
+
+Tipos de procesos, que encontramos, en este patrón: \textbf{\emph{filters}}.
 
 \begin{basic_box}
     \faIcon[regular]{gem} ¿Podemos ordenar un vector utilizando este patrón? (Ver apunte de Gemas)
@@ -148,16 +166,16 @@ Por ejemplo, aplicar filtros sobre imágenes.
 
 \subsection{Clientes y servidores}
 
-En este patrón, existen procesos que; realizan pedidos y esperan por una respuesta (clientes) y, otros procesos que, esperan pedidos para procesar (servidores.)
+En este patrón, existen procesos que; realizan pedidos y esperan por una respuesta (clientes) y, otros procesos que, esperan pedidos para procesar (servidores.) Este tipo de soluciones, predominan en aplicaciones distribuidas.
 
-Este tipo de soluciones, predominan en aplicaciones distribuidas.
+Tipos de procesos, que encontramos, en este patrón: \textbf{\emph{clientes y servidores}}.
 
 \subsection{Pares que interactúan}
 
 En este esquema los procesos, posiblemente idénticos, resuelven parte del problema y se comunican para avanzar en la tarea y completar el objetivo.
-
 Similar al iterativo pero, requiere de sincronización por condición (barriers) entre pares.
 
+Tipos de procesos, que encontramos, en este patrón: \textbf{\emph{peers}}.
 
 \section{Estados, acciones e historias}
 
