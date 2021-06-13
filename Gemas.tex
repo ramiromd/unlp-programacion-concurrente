@@ -109,5 +109,19 @@ Tiempo P$_{resto}= 297216 \times 1 ut + 294912 \times 2 ut + 294912 \times 3 = 1
 
 Con estos nuevos tiempos el speedup será de 7,1.
 
+{\large \textbf{Dado el siguiente programa, indice si es posible que finalice.}}
+
+\begin{lstlisting}
+bool continue = true;
+bool try = false;
+co  while (continue) { try = true; try = false; } #(P)
+/   <await(try) continue = false> #(Q)
+oc
+\end{lstlisting}
+
+Con una política débilmente fair, el programa podría no terminar. Ya que, \emph{try} no se mantiene verdadera hasta ser vista por (Q).
+
+Con una política fuertemente fair, el programa podría terminar. Ya que, \emph{try} se convierte en verdadera con infinita frecuencia.
+
 
 \end{document}

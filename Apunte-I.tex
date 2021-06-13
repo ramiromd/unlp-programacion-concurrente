@@ -393,7 +393,7 @@ End.
 \end{lstlisting}
 
 \begin{basic_box}
-    \faIcon[regular]{gem} ¿Qué pasaría si, en lugar de una cola fuese un arreglo? (Ver apunte de Gemas)
+    \faIcon[regular]{gem} ¿Qué pasaría si, en lugar de una cola fuese un arreglo? (Ver búffers limitados en Apunte II)
 \end{basic_box}
 
 \section{Propiedades}
@@ -421,17 +421,7 @@ La mayoría de las propiedades de vida, de un programa concurrente, dependen del
 Para que los procesos avancen, acciones atómicas candidatas deben ser elegidas para su ejecución. Dicha tarea de selección, es llevada a cabo por una política de planificación (\textbf{\emph{scheduling policy}}). Según la bibliografía, existen 3 (tres) grados de fairness que toda política de planificación debería proveer.
 
 \begin{basic_box}
-    \faIcon[regular]{gem} ¿El siguiente programa, finaliza? (Ver apunte de Gemas)
-
-    \begin{lstlisting}
-        bool continue = true;
-        bool try = false;
-        
-        co  while (continue) { try = true; try = false; } (P)
-        /   <await(try) continue = false> (Q)
-        oc
-    \end{lstlisting}
-
+    \faIcon[regular]{gem} Ver el ejercicio en el apunte de Gemas.
 \end{basic_box}
 
 \subsection{Incondicionalmente Fair}

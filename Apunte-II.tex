@@ -336,7 +336,7 @@ end;
     \item El tiempo de ejecución del coordinador, es proporcional a \emph{n}. Por su uso, no es recomendable para \emph{n} muy grandes.
 \end{enumerate}
 
-\subsection{Tree barrier}
+\subsection{Combined tree barrier}
 Este algoritmo combina el rol de los workers y el del coordinador, de forma tal que cada worker es, también, un coordinador.
 
 Los procesos son organizados en forma de árbol y se procede con la siguiente lógica: cada nodo worker primero espera a que sus hijos le den la señal de llegada, luego avisa a su padre que él también llegó.
@@ -583,11 +583,22 @@ Process Philosopher[4]
 end;
 \end{lstlisting}
 
+\begin{basic_box}
+    \faIcon[regular]{gem} Si en lugar de 5 filósofos fueran 3, ¿el problema seguiría siendo de exclusión mutua selectiva? ¿Por qué?
+
+    Si hay 3 filósofos, por consiguiente hay 2 tenedores. Lo que significa que todos los procesos son adyacentes, por lo cual la competencia se da entre todos y dejaría de ser un problema de exclusión mutua selectiva.
+\end{basic_box}
+\begin{basic_box}
+    \faIcon[regular]{gem} El problema de los filósofos resuelto de forma centralizada y sin posiciones fijas ¿es de exclusión mutua selectiva? ¿Por qué?
+
+    Si los filósofos pueden utilizar cualquier cubierto (sin posiciones fijas) y, en caso de haber disponibilidad, son servidos por un mozo (coordinador). No estamos hablando de exclusión mutua selectiva ya que, los filosofos compiten contra todos no solo contra sus adyacentes.
+\end{basic_box}
+
 \subsection{Lectores y escritores}
 
 Otro ejemplo, de exclusión mutua selectiva, donde clases de procesos, compiten por el acceso a un recurso es el siguiente. Procesos escritores, que requieren acceso exclusivo para evitar interferencias. Y procesos, lectores, los cuales pueden acceder de forma concurrente entre sí (siempre y cuando no haya escritores haciendo uso de la base de datos).
 
-El siguiente algoritmo, resuelve el problema implementando exclusión mutua básica. No obstante, esta solución no es fair. Ya que, prioriza lectores por sobre escritores.
+El siguiente algoritmo, resuelve el problema. No obstante, esta solución no es fair. Ya que, prioriza lectores por sobre escritores.
 
 \begin{lstlisting} [multicols=2]
 int nr = 0; # lectores activos
@@ -617,6 +628,12 @@ Process Reader
     end;
 end;
 \end{lstlisting}
+
+\begin{basic_box}
+    \faIcon[regular]{gem} Si solo se acepta sólo 1 escritor  o 1 lector en la BD, ¿tenemos un problema de exclusión mutua selectiva? ¿Por qué?
+
+    En este caso, sería solo un problema de exclusión mutua. Debido a que, por definición, la competencia es entre todos los procesos (lectores vs escritores, lectores vs lectores, escritores vs escritores).
+\end{basic_box}
 
 \section{Passing the Baton}
 
@@ -699,7 +716,11 @@ Process Reader[1..n]
 End.
 \end{lstlisting}
 
-Nota: Cuando utilizamos monitores, el análogo a esta técnica es \textbf{\emph{passing the condition}}.
+\begin{basic_box}
+    \faIcon[regular]{gem} ¿Qué relación encuentra con la técnica de passing the condition?
+
+    Ambas técnicas poseen la misma finalidad. Solo que, Passing the condition es utilizada en Monitores.
+\end{basic_box}
 
 \section{Instrucciones máquina utilizadas}
 
