@@ -1,0 +1,468 @@
+\documentclass[a4paper, 10pt]{report}
+\usepackage{common}
+\usetikzlibrary{snakes}
+
+% Cuerpo
+\begin{document}
+
+% Carátula
+\title{
+    III\\
+    Programación Concurrente\\
+    \large Clases 7 a 9: Memoria distribuida
+}
+\author{Ramiro Martínez D'Elía}
+\date{2021}
+\maketitle
+
+% Índice
+\tableofcontents
+
+\chapter{Programa distribuido}
+
+\section{Definición}
+
+Los mecanismos de sincronización vistos hasta ahora, están pensados para programas concurrentes que ejecutan en hardware con procesadores que comparten memoria (arquitecturas de memoria compartida).
+
+Sin embargo, hay arquitecturas donde los CPU solo comparten una red de comunicación. Bajo este contexto, los procesos ya no comparten variables sino que comparten \textbf{\emph{canales}}.
+
+Los \textbf{\emph{canales}} son abstracciones de una red de comunicación física y al ser el único recurso compartido entre procesos, toda variable es local a un solo proceso y solo accedida por ese proceso. Esto descarta la necesidad de exclusión mutua.
+
+La ausencia de variables compartidas, permite que los procesos puedan ejecutarse en procesadores distribuidos. Por esta razón, los programas concurrentes que utilizan pasaje de mensajes son llamados \textbf{\emph{programas distribuidos}}.
+
+\section{Canales}
+
+Los canales son \textbf{\emph{estructuras FIFO}} (First In First Out) que contienen mensajes pendientes. Estas estructuras soportan 2 (dos) \textbf{operaciones atómicas \emph{send} y \emph{receive}}. Para iniciar una comunicación, un proceso envía un mensaje por el canal; y otro lo adquiere recibiendolo desde el mismo canal.
+
+La operación \textbf{\emph{send}} puede ser \textbf{asincrónica} (no demora al proceso que la invoca) y \textbf{sincrónica} (demora al proceso que la invoca, hasta que su mensaje fuese recibido). La operación \textbf{\emph{receive}} \textbf{siempre demora} al proceso que la invoca.
+
+La estructura FIFO y la atomicidad de las primitivas send y receive aseguran que; los mensajes eventualmente serán recibidos, los mensajes no serán corrompidos y serán entregados en el orden en que fueron encolados.
+
+
+\begin{lstlisting}[multicols=2]
+channel ch1(string),
+        ch2(string);
+
+Program Uno
+    string respuesta;
+    send ch2("Hola");
+    receive ch1(respuesta);
+End.
+
+Program Dos
+    string saludo;
+    receive ch2(saludo);
+    send ch1("Aca esta tu respuesta ...);
+End.
+\end{lstlisting}
+
+Según la forma en que se utilicen, los canales, pueden clasificarse en los siguientes tipos:
+
+\begin{itemize}
+    \item \textbf{Mailbox}: Cualquier proceso puede enviar y recibir datos, por alguno de los canales declarados. Relación \emph{n:n}.
+    \item \textbf{Input Port}: El canal tiene un único receptor y \emph(n) emisores. Relación \emph{1:n}.
+    \item \textbf{Link}: El canal tiene un único receptor y un único emisor. Relación \emph{1:1}.
+\end{itemize}
+
+\chapter{Patrones de resolución}
+
+Los tipos de procesos que podemos encontrar en los programas distribuidos, son los mismos que en un programa concurrente con memoria compartida (peers, filters, clientes y servidores).
+Lo mismo ocurre, con los patrones de resolución.
+
+A continuación, abordaremos un patrón en particular: \textbf{\emph{interacting peers}}, donde se describirá la forma de interconexión entre procesos. Todos los ejemplos, implementan \textbf{\emph{pasaje de mensajes asincrónicos (PMA)}}.
+
+\begin{basic_box}
+    \faIcon[regular]{gem} Soluciones para ordenar números: Merged Network, Odd/Even Exchange Sort, Pipeline. ¿Cantidad de procesos? ¿Cantidad de mensajes? (Ver apunte de gemas).
+\end{basic_box}
+
+\section{Iteracting peers: intercambiando valores}
+
+Supongamos el problema donde existen \textbf{\emph{n}} procesos, cada uno con un valor local \textbf{\emph{v}}. El objetivo es, lograr que todos los procesos conozcan el máximo y mínimo valor de \textbf{\emph{v}} de entre todos.
+
+En este caso, los procesos son identicos. Por lo cual, podemos diseñar una solución basada en el esquema de pares que interactúan. 
+
+A contuniación se detallan soluciones, empleando 3 (tres) formas distintas de conexión entre procesos: \textbf{\emph{centralizada}}, \textbf{\emph{simétrica}} y \textbf{\emph{circular}}.
+
+\subsection{Solución centralizada}
+
+En esta solución, utilizaremos un proceso central que; recibirá los valores de los demás. Computará los máximos y mínimos e informará al resto.
+
+\begin{multicols}{2}
+\begin{lstlisting}
+channel values(int),
+        results[n](int, int);
+    
+Process Peer[i = 1 to n-1]
+    int v, min, max;
+    send values(v);
+    receive results[i](min, max);
+End.
+
+Process CentralPeer[0]
+    int v, min, max, temp;
+
+    for(i=1 to n-1)
+        receive values(temp);
+        # Compara y actualiza ...
+    end;
+
+    for(i=1 to n-1)
+        send results[i](min, max);
+End.
+\end{lstlisting}
+
+\columnbreak
+
+\centering
+\vspace*{\fill}
+\begin{tikzpicture}
+    \node[circle,draw, minimum size=1cm] (0) at (0,0) {$P_0$};
+    \node[circle,draw, minimum size=1cm] (1) at (0,2) {$P_1$};
+    \node[circle,draw, minimum size=1cm] (2) at (2,0) {$P_2$};
+    \node[circle,draw, minimum size=1cm] (3) at (1.5, -1.5) {$P_3$};
+    \node[circle,draw, minimum size=1cm] (4) at (-1.5,-1.5) {$P_4$};
+    \node[circle,draw, minimum size=1cm] (5) at (-2, 0) {$P_5$};
+    \draw (0) -- (1);
+    \draw (0) -- (2);
+    \draw (0) -- (3);
+    \draw (0) -- (4);
+    \draw (0) -- (5);
+\end{tikzpicture}
+\vspace*{\fill}
+\end{multicols}
+
+\subsection{Solución simétrica}
+
+En esta solución, todos los procesos realizan el mismo algoritmo. Cada par de procesos, se encuentran conectados mediante un canal.
+
+Cada proceso, envía los datos al resto, y así cada uno puede conocer todos los valores y efecturar el cálculo de máximos y mínimos en paralelo.
+
+\begin{multicols}{2}
+\begin{lstlisting}
+channel values[n](int, int);
+
+Process Peer[i = 0 to n]
+    int v, min, max, temp;
+
+    for(j=0 to n st j != i)
+        send values[j](v);
+
+    for(j=0 to n st j != i)
+        receive receive[i](temp)
+        # Compara y actualiza.
+End.
+\end{lstlisting}
+
+\columnbreak
+    
+\centering
+\vspace*{\fill}
+\begin{tikzpicture}
+    \node[circle,draw, minimum size=1cm] (0) at (0,2) {$P_0$};
+    \node[circle,draw, minimum size=1cm] (1) at (2,1) {$P_1$};
+    \node[circle,draw, minimum size=1cm] (2) at (2,-1) {$P_2$};
+    \node[circle,draw, minimum size=1cm] (3) at (0, -2) {$P_3$};
+    \node[circle,draw, minimum size=1cm] (4) at (-2,-1) {$P_4$};
+    \node[circle,draw, minimum size=1cm] (5) at (-2, 1) {$P_5$};
+    \draw (0) -- (1); \draw (0) -- (2); \draw (0) -- (3); \draw (0) -- (4);
+    \draw (0) -- (5); \draw (1) -- (2); \draw (1) -- (3); \draw (1) -- (4); 
+    \draw (1) -- (5); \draw (2) -- (3); \draw (2) -- (4); \draw (2) -- (5);
+    \draw (3) -- (4); \draw (3) -- (5); \draw (4) -- (5);
+\end{tikzpicture}
+\vspace*{\fill}
+\end{multicols}
+
+\subsection{Solución circular}
+
+En esta solución, cada proceso recibe mensajes de su antecesor y envía mensajes a su sucesor. Con este enfoque, harán falta 2 (dos) iteraciones al anillo. La primera, para obtener el máximo y el mínimo. Y la segunda, para notificar a todos los procesos.
+
+\begin{multicols}{2}
+\begin{lstlisting}
+channel values[n](int, int);
+
+Process Initial[0]
+    int v, min = v, max = v;
+
+    # Inicia primera iteracion ...
+    send values[1](min, max);
+    receive values[0](min, max);
+
+    # Inicia segunda iteracion ...
+    send values[1](min, max);
+End.
+        
+Process Peer[i = 1 to n-1]
+    int v, min, max;
+
+    # Primera iteracion ...
+    receive values[i](min, max);
+    # Compara y actualiza valores ...
+    send values[(i+1) mod n](min, max);
+
+    # Segunda iteracion
+    receive values[i](min, max);
+    send values[(i+1) mod n](min, max);
+End.
+    
+
+\end{lstlisting}
+    
+\columnbreak
+    
+\centering
+\vspace*{\fill}
+\begin{tikzpicture}
+    \node[circle,draw, minimum size=1cm] (0) at (0,2) {$P_0$};
+    \node[circle,draw, minimum size=1cm] (1) at (2,1) {$P_1$};
+    \node[circle,draw, minimum size=1cm] (2) at (2,-1) {$P_2$};
+    \node[circle,draw, minimum size=1cm] (3) at (0, -2) {$P_3$};
+    \node[circle,draw, minimum size=1cm] (4) at (-2,-1) {$P_4$};
+    \node[circle,draw, minimum size=1cm] (5) at (-2, 1) {$P_5$};
+    \draw (0) -- (1); \draw (1) -- (2); \draw (2) -- (3); 
+    \draw (3) -- (4); \draw (4) -- (5); \draw (5) -- (0);
+\end{tikzpicture}
+\vspace*{\fill}
+\end{multicols}
+
+\subsection{Conclusiones}
+
+Desde el punto de vista de la cantida de mensajes enviados y la eficiencia, podemos obtener las siguientes conclusiones para las soluciones descriptas.
+
+{\renewcommand{\arraystretch}{2}%\
+\begin{center}
+\begin{tabular}{p{2.5cm} p{3cm} p{1.8cm} p{7.5cm} }
+\textbf{Solución} &  \textbf{\# Mensajes} & \textbf{Orden} & \textbf{Conclusión} \\
+\textbf{Centralizada} & $2(n-1)$ & Lineal \newline $O(n)$ & No hay paralelismo, toda la carga del cómputo recae en CentralPeer. Menor overhead en el pasaje de mensajes. Menor eficiencia a mayor $n$. \\
+\hline
+\textbf{Simétrica} & $n(n-1)$&  Cuadrático \newline $O(n^2)$& Cómputo paralelo pero, mayor overhead en el pasaje de mensjaes.\\
+\hline
+\textbf{Circular} &  $2(n-1)$& Lineal \newline $O(n)$ & Cómputo paralelo. Mayor eficiencia para $n$ muy grandes.
+\end{tabular}
+\end{center}}
+
+Nota: Con la primitiva \textbf{\emph{broadcast}}, la cantidad de mensajes se reduce a $n$ para todos los casos. Lo que hace, dicha primitiva es envíar un mensaje (de forma concurrente) a todos los procesos que escuchen el canal utilizado.
+
+\chapter{PMS - Pasaje de Mensajes Asincrónico}
+
+\section{CSP y Comunicación guardada}
+
+Con CSP (\textbf{\emph{Communicating Sequential Processes}}) se introduce el concepto de \textbf{\emph{PMS y comunicación guardada}}. Los procesos, se enviarán mensajes. entre ellos, mediante links directos. La forma general de comunicación, entre procesos, en CSP es de la siguiente forma:
+
+\begin{lstlisting}
+DestinationProc!portName(...);
+SourceProc?portName(...);
+\end{lstlisting}
+
+Siendo los operadores \textbf{\emph{!}} y \textbf{\emph{?}} para el envío y recepción de mensajes respectivamente. Dos procesos, entablabran comunicación cuando ejecuten sentencias de comunicación que hagan match entre sí. 
+
+El siguiente ejemplo, muestra un proceso (Copy) que copia caracteres entre 2 (dos) procesos East y West.
+
+\begin{lstlisting}
+Process Copy
+
+Char c;
+
+while (true)
+    west?(c)
+    east!(c);
+end.
+
+End.
+\end{lstlisting}
+
+La principal limitación de \textbf{\emph{!}} y \textbf{\emph{?}} es que, son primitivas bloqueantes. Usualmente, se desea, que un proceso pueda comunicarse con los demás; sin importar el orden en que los otros quieran comunicarse con el.
+
+Por ejemplo, si modificamos el ejemplo de Copy de forma tal que; ahora se deben copiar de a 2 caracteres. El proceso Copy, entonces, debe esperar a recibir los 2 caracteres desde West, antes de retransmitirlos. Esto provoca que, East quede bloqueado.
+
+\begin{lstlisting}
+Process Copy
+
+Char c1, c2;
+
+while (true)
+    west?(c1); west?(c2);
+    east!(c1); east!(c1);
+end.
+
+End.
+\end{lstlisting}
+
+\textbf{\emph{La comunicación guardada}}, ofrece un tipo de \textbf{\emph{comunicación no determinística}} que resuelve la limitación planteada. \textbf{\emph{Combinando sentencias condicionales y de comunicación}} de la siguiente forma $B; C \rightarrow S $, donde:
+
+\begin{itemize}
+    \item \textbf{\emph{B}} es una sentencia condicional, que de no existir se asume \emph{verdadera}.
+    \item \textbf{\emph{C}} es una sentencia de comunicación.
+    \item \textbf{\emph{D}} es un conjunto de sentencias a ejecutar.
+    \item Juntas \textbf{\emph{B}} y \textbf{\emph{C}} forman una \textbf{\emph{guarda}} que "protegen" la ejecución de \textbf{\emph{S}}
+\end{itemize}
+
+Con respecto al funcionamiento de las \textbf{\emph{guardas}}, se debe tener en cuenta lo siguiente:
+
+\begin{itemize}
+    \item La guarda tiene \textbf{\emph{éxito}} si, \textbf{\emph{B}} es verdadera y \textbf{\emph{C}} no causa demora (tiene mensajes $\rightarrow$ ejecución inmediata).
+    \item La guarda \textbf{\emph{falla}} si, \textbf{\emph{B}} es falsa.
+    \item La guarda se \textbf{\emph{bloquea}} si, \textbf{\emph{B}} es verdadera y \textbf{\emph{C}} causa demora.
+\end{itemize}
+
+Podemos aplicar comunicación guardada sobre 2 (dos) tipos de estructuras del control: el \textbf{\emph{if}} y el \textbf{\emph{do}}. Cada una, con la siguiente semántica de ejecución:
+
+\begin{itemize}
+    \item Si \textbf{\emph{todas las guardas fallan}} (en simultáneo); la estructura de control finaliza sin efectos.
+    \item Si al menos una guarda tiene éxito; se elige una de manera no deterministica, se ejecuta su \textbf{\emph{B}} y luego su \textbf{\emph{C}}. En el caso del \textbf{\emph{if}}, la estructura finaliza.
+    \item Si todas las \textbf{\emph{guardas están bloqueadas}}; se espera hasta que alguna tenga éxito.
+\end{itemize}
+
+La versión del proceso Copy, para 2 caracteres, se puede mejorar utilizando comunicación guardada del siguiente modo:
+
+\begin{lstlisting}
+Process Copy
+
+char c1, c2;
+west?(c1);
+
+do  true; west?(c2) -> east!(c1); c1=c2;
+[]  true; east!(c1) -> west?(c1);
+end;
+
+End.
+\end{lstlisting}
+
+Aplicando comunicación guardada, el proceso \emph{Copy}, una vez recibido el primer caracter podrá (de forma no determinística) esperar al segundo caracter o enviar el primero a \emph{East}.
+De esta forma, logramos reducir el bloqueo en la comunicación entre \emph{Copy} y \emph{East}.
+
+\chapter{RPC, Rendezvous y Notaciones primitivas}
+
+\section{Introducción}
+
+La técnica de pasaje de mensajes, resulta óptima para resolver problemas del tipo productores/consumidores y pares que interactúan. Ya que, estos plantean un tipo de comunicación unidireccional entre procesos.
+
+No obstante, el uso de esta técnica para problemas del tipo cliente/servidor; no resulta del todo óptima. Ese tipo de problemas supone una comunicación bidireccional. Es decir, un cliente realiza una petición y, posteriormente, un servidor le otorga una respuesta. Esto nos obliga a definir un gran número de canales:
+
+\begin{itemize}
+    \item Al menos 1 (un) canal por el cual, el servidor reciba peticiones.
+    \item Un canal de respuesta para cada cliente.
+\end{itemize}
+
+Los mecanismos de \textbf{\emph{RPC}} y \textbf{\emph{Rendezvous}}, resuelven de forma más adecuada los problemas del tipo cliente/servidor. Combinando PMS con aspectos de monitores.
+
+Como en \textbf{\emph{monitores}}, un módulo (o proceso) expone operaciones públicas. Dichas operaciones, son invocadas por otro módulo (o proceso) utilizando la sentencia \textbf{\emph{call}}.
+
+Como en \textbf{\emph{PMS}}, la eejcución de una sentencia \textbf{\emph{call}} demora al llamador hasta obtener una respuesta.
+
+Las \textbf{\emph{operaciones}}, resultan \textbf{\emph{canales de comunicación bidireccional}}. Desde el llamador hacia el proceso que sirve la llamada, y luego, de vuelta al llamador.
+
+
+\section{Remote Procedure Calls (RPC)}
+
+Los programas se descomponen en módulos (con procesos y procedimientos). Los procesos, de un módulo, son llamados \textbf{\emph{background}} para diferenciarlos de los procesos exportados (\textbf{\emph{servers}}). El siguiente ejemplo, muestra de forma trivial la especificación de un módulo.
+
+\begin{lstlisting}
+Module module_name
+    op opname(params)[returns type];        # (1) Interfaz publica
+Body
+    int x;                                  # (2) Definicion de variables locales
+    x = 0;                                  # e inicializacion    
+
+    proc opname(params)[returns type]       # (3) Definicion de procedimientos exportados
+    begin
+        # Cuerpo del procedimiento.
+    end;
+
+    proc local_proc(params)[returns type]   # (4) Definicion de procedimientos locales
+    begin
+        # Cuerpo del procedimiento.
+    end;
+
+    Process Main                            # (5) Definicion de procesos locales
+        # Cuerpo del proceso bakground
+    end;
+End module_name;
+\end{lstlisting}
+
+Los procesos background tienen acceso a las variables y pueden invocar procedimientos del mismo módulo. A su vez, como sucede en monitores, pueden invocar procedimientos definidos en otros módulos. Siempre y cuando, estos últimos, sean exportados por dicho módulo.
+
+La ejecución de una llama intermódulo, difiere con respecto a una local.
+
+\begin{itemize}
+    \item Un nuevo proceso atiende la llamada y los argumentos son pasados como mensajes entre el llamador y el proceso servidor.
+    \item El proceso llamador que demorado mientras se ejecuta el cuerpo del procedimiento invocado.
+    \item Cuando el proceso servidor finaliza su ejecución del procedimiento invocado, retorna los resultados y finaliza.
+    \item El proceso llamador, continua su ejecución.
+\end{itemize}
+
+\centerline{
+    \includegraphics[width=4in, height=1.5in]{assets/rpc_execution.png}
+}
+
+\subsection{Sincronización}
+
+Con RPC, la \textbf{\emph{sincronización entre proceso llamador y servidor está implícita}}. No obstante, necesitamos mecanismos para que procesos server y background sincronicen dentro de un módulo. Existen 2 (dos) enfoques para proveer sincronización dentro de un módulo.
+
+
+\begin{multicols}{2}
+\centerline{\textbf{\emph{A lo sumo, un proceso activo}}}
+
+\centering
+Apropidado para entornos monoprocesador ya que, reduce el context switch.
+
+\begin{itemize}
+    \item Mutex $\rightarrow$ Implícito.
+    \item Condición $\rightarrow$ Explícito (semáforos o monitores).
+\end{itemize}
+
+\columnbreak
+\centerline{\textbf{\emph{Ejecución concurrente}}}
+
+Apropidado, de forma natural, para entornos multriprocesador.
+
+\begin{itemize}
+    \item Mutex $\rightarrow$ Explícito (semáforos o monitores).
+    \item Condición $\rightarrow$ Explícito (semáforos o monitores).
+\end{itemize}
+
+\end{multicols}
+
+\subsection{Time Server}
+
+El siguiente módulo es una adaptación del ejemplo del libro.
+
+\begin{lstlisting}
+module TimeServer
+
+op get_time(): int;
+op delay(int interval);
+
+body
+
+int time = 0;                   # Tiempo inicial del TimeServer (en ms).
+Queue delayed(waketime, id);    # Cola de procesos dormidos, por la operacion delay.
+Sem m = 1;                      # Semaforo para garantizar mutex, en el acceso a delayed.
+Sem d = ([n] 0);                # Arreglo de semaforos para demorar procesos.
+
+proc get_time(): int            # Retorna el tiempo actual del servidor en ms.
+    return time;
+end;
+
+proc delay(int interval)        # Demora un proceso tantos ms, como interval lo indique.
+    P(m);
+    waketime = time + interval;
+    delayed.push(waketime, id);
+    V(m);
+    P(d[id]);
+end;
+
+process Clock                   # Proceso background. Mantiene actualizada la variable time
+    while (true)                # y despierta procesos demorados por la operacion delay.
+        time++;                 
+        P(m);
+        while (time >= menor waketime en delayed)
+            delayed.pop(waketime, id);
+            V(d[id]);
+        end;
+        V(m);
+    end;
+end;
+End.
+\end{lstlisting}
+
+\end{document}
