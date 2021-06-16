@@ -465,4 +465,155 @@ end;
 End.
 \end{lstlisting}
 
+\section{Rendezvous}
+
+Al igual que RPC, el programa se descompone en módulos, se brindan los mecanismos para la \textbf{\emph{comunicación intermódulo}} y se demoran a los procesos llamadores.
+
+La cabecera de un módulo, debe especificar las operaciones exportadas. Mientras que el cuerpo, del módulo, contendrá \textbf{\emph{un único proceso}}; que atenderá las llamadas a las operaciones en lugar de crear un nuevo proceso servidor.
+
+Dicho proceso, esperara por una call y actuar. Las llamadas, a operaciones, serán atendidas de a una por vez aunque los procesos se ejecuten concurrentemente. Esto \textbf{\emph{provee sincronización dentro del módulo}}.
+
+\centerline{
+    \includegraphics[width=4in, height=1.5in]{assets/rendezvous_execution.png}
+}
+
+\subsection{Sentencias Input}
+
+Suponiendo que, un módulo exporta la siguiente operación: \lstinline{op opname(formals)}. El proceso servidor realiza rendezvous con un llamador de \lstinline{opname}, ejecutando una sentencia \textbf{\emph{input}}. Dicha sentencia, respeta la siguiente forma:
+
+\begin{lstlisting}
+in opname(formals) -> S; ni
+\end{lstlisting}
+
+Las partes entre \lstinline{in} y \lstinline{ni} son conocidas como \textbf{\emph{operaciones guardadas}}. La guarda nombra las operaciones y provee sus parámetros.
+En cuanto a \lstinline{S}, es un conjunto de sentencias a ejecutar en la invocación de la operación. Los parámetros, de la operación, tienen alcance de a toda la guarda; por consiguente \lstinline{S} podrá leer y escribir sus valores.
+
+Una sentencia \lstinline{input}, demora al proceso servidor hasta que haya al menos una llamada pendiente a \lstinline{opname}. Entonces, elige la llamada pendiente más antigua, copia los argumentos en los parámetros formales, ejecuta \lstinline{S} y finalmente, retorna los resultados al proceso llamador.
+
+Es posible ofrecer \textbf{\emph{comunicación guardada}}, en una sentencia \lstinline{input} de la siguiente forma:
+
+
+\begin{lstlisting}[escapeinside={(*}{*)}]
+In opname(*$_1$*) (formals) and B(*$_1$*) by E(*$_1$*) -> S(*$_1$*)
+[] opname(*$_2$*) (formals) and B(*$_2$*) by E(*$_2$*) -> S(*$_2$*)
+Ni
+\end{lstlisting}
+
+Donde \textbf{\emph{E}} supone una \textbf{\emph{condicion booleana de sincronización}}. Mientras que, \textbf{\emph{E}} una \textbf{\emph{expresión de scheduling}}. Ambas expresiones son opcionales.
+
+\subsection{Buffer limitado}
+
+\begin{lstlisting}
+Module Buffer
+
+op depositar(int);
+op retirar(int);
+
+Body
+Process Buffer
+    Queue buffer;
+    int cant = 0;
+    int cantMax = n;
+
+    while(true)
+        in depositar(x) and (cant < cantMax) ->
+            buffer.push(x);
+            cant++;
+        [] retirar(x) and (cat > 0) ->
+            buffer.pop(x);
+            cant--
+        ni
+    end;
+end;
+End.
+\end{lstlisting}
+
+\subsection{ADA}
+
+Un programa, escrito en ADA, está compuesto por subprogramas, paquetes y tareas. Donde \textbf{\emph{rendezvous}} es el principal mecanismo de comunicación y sincronización.
+
+Las tareas (\textbf{\emph{tasks}}), son procesos independientes que cuentan con una especificación y un cuerpo (\textbf{\emph{body}}). En la especificación, se definen las operaciones visibles por otros procesos (\textbf{\emph{entry}}). El cuerpo, contiene variables locales (junto con su inicialización) y sentencias de atención (\textbf{\emph{entry calls}}).
+
+\begin{lstlisting}
+Procedure nombreProceso
+
+Task nombreTarea Is
+    # Declaracion de entries
+end;
+
+Task Body nombreTarea Is
+    # Declaracion de locales e inicializacion
+Begin
+    # Sentencias ...
+end;
+
+End nombreProceso;
+\end{lstlisting}
+
+Un programa en ADA, atiende solicitudes a procedimientos mediante la sentencia \lstinline{accept}. La cual equivale a \lstinline{input} pero, su ejecución es determinística y no posee guardas. Dicha sentencia, posee la siguiente forma:
+
+\begin{lstlisting}
+Accept E (formals) do
+    # Sentencias
+end;
+\end{lstlisting}
+
+De ser necesario, comunicación guardada con un comportamiento no determinístico. ADA ofrece la sentencia \lstinline{select}. No obstante, \lstinline{select} resulta menos poderosa que la notación formal establecida en rendezvous; por 2 (dos) motivos.
+
+\begin{enumerate}
+    \item No soporta expresiones de scheduling.
+    \item La expresión de sincronización, no puede referenciar a los parámetros formales de la operación.
+\end{enumerate}
+
+\subsection{Buffer limitado con ADA}
+
+\begin{lstlisting}
+Procedure nombreProceso
+
+Task Mailbox Is
+    Entry Depositar (msg: IN string)
+    Entry Retirar (msg: OUT string)
+End;
+    
+Task Body Mailbox Is
+    Array datos[n];
+    Int count, first, last = 0;
+Begin
+    Loop
+        Select
+            When (count < n) -> Accept Depositar (msg: IN string)
+                # Sentencias de la operacion Depositar
+            End Depositar;
+            Or
+            When (count > 0) -> Accept Retirar (msg: OUT string)
+                # Sentencias de la operacion Retirar
+            End Retirar;
+        End;
+    End;
+End;
+End nombreProceso;
+\end{lstlisting}
+
+\section{Notaciones primitivas}
+
+Mecanismo que \textbf{\emph{combina RPC, Rendezvous y PMA en un paquete coherente}}. Con este mecanismo, será posible implementar una solución óptima al problema de filtros y pares que interactúan mediante el uso de las técnicas de RPC y Rendezvous.
+
+Los programas, son colecciones de módulos que exportan operaciones visibles para otros módulos o procesos.
+
+Una operación puede ser invocada por call (sincrónico) o por send (asincrónico). Como también una operación puede ser servida por RPC o Rendezvous (según la elección del programador del módulo).
+
+{\renewcommand{\arraystretch}{2}%\
+\begin{center}
+    \begin{tabular}{c c c}
+    \textbf{Invocación} &  \textbf{Servicio} & \textbf{Efecto} \\
+    call & proc & Llamado a procedimiento. \\
+    \hline
+    call & in & Rendezvous. \\
+    \hline
+    send & proc & Creación dinámica de un proceso. \\
+    \hline
+    send & in & PMA. \\
+\end{tabular}
+\end{center}}
+
 \end{document}
