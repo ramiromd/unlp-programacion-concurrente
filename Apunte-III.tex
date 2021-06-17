@@ -1,6 +1,6 @@
 \documentclass[a4paper, 10pt]{report}
 \usepackage{common}
-\usetikzlibrary{snakes}
+\usetikzlibrary{petri,positioning}
 
 % Cuerpo
 \begin{document}
@@ -615,5 +615,172 @@ Una operación puede ser invocada por call (sincrónico) o por send (asincrónic
     send & in & PMA. \\
 \end{tabular}
 \end{center}}
+
+\chapter{Paradigmas de intercacción entre procesos}
+
+\section{Introducción}
+
+Existen 3 (tres) esquemas básicos de interacción entre procesos: productores/consumidores, cliente/servidor y pares que interactúan. Estos esquemas básicos se pueden combinar de muchas maneras, dando lugar a nuevos modelos o paradigmas de interacción entre procesos.
+
+\section{Manager and workers}
+
+Es la implementación distribuida del modelo \textbf{\emph{bag of tasks}}. Diversos procesos workers comparten una bolsa de tareas. Cada worker repetidamente toma una tarea de la bolsa, la ejecuta y posiblemente genere una (o más) tareas nuevas para depositar en la bolsa.
+
+La principal ventaja de este paradigma, en cuanto a cómputo paralelo, es la facilidad para escalar y balancear la carga de trabajo de cada worker.
+
+Por el otro lado un proceso manager representa la bolsa de tareas. Es decir, mantiene la lista de tareas, recolecta los resultados y detecta la finalización de todas las tareas.
+
+En escencia, un manager funciona como un server. Mientras que, un worker como un cliente.
+
+\textbf{Caso de uso}: multiplicación de matrices.
+
+\section{Heartbeat}
+
+Los procesos, periódicamente, deben intercambiar información con mecanismos de tipo send/receive.
+
+En particular, puede ser utilizado cuando los datos están divididos entre los procesos workers. Donde, cada worker es responsable de actualizar una parte de los datos. Dicha actualización, dependerá de los valores que contenga cada worker o sus vecinos inmediatos.
+
+La lógica de este paradigma, tiene relación con su nombre. Los procesos se expanden enviando información a sus vecinos y se contraen recibiendo información actualizada desde sus vecinos.
+
+La interacción entre vecinos, dada por la disposición de las primitivas send/receive, produce una especie de barrera de sincronización entre ellos. Impidiendo que, cada worker inicie su fase de actualización antes de que su vecino no finalice la suya.
+
+\textbf{Caso de uso}: paralelizar soluciones iterativas $\rightarrow$ topología de una red, procesamiento de imágenes.
+
+\section{Pipeline}
+
+Los procesos, funcionan como filtros y se encuentran conectados entre sí; formando una colección de filtros. De esta manera, la información fluye por los procesos utilizando alguna forma de receive/send. Existen 3 (tres) formas de conectar los procesos:
+
+\begin{multicols}{2}
+
+\textbf{Pipeline Abierto}
+
+La fuente de entrada y salida, del pipeline, no está especificada.
+
+\columnbreak
+\begin{tikzpicture}
+    \node[circle,draw=none, minimum size=0.5cm] (in) at (0,0) {};
+    \node[circle,draw, minimum size=0.5cm] (worker0) at (1.2,0) {$w_0$};
+    \node[circle,draw, minimum size=0.5cm] (worker1) at (2.4,0) {$w_1$};
+    \node[circle,draw=none, minimum size=0.5cm] (workerX) at (3.6,0) {...};
+    \node[circle,draw, minimum size=0.5cm] (workerN) at (4.8,0) {$w_n$};
+    \node[circle,draw=none, minimum size=0.5cm] (out) at (6,0) {};
+    \draw[thick] (in) edge[post] (worker0);
+    \draw[thick] (worker0) edge[post] (worker1);
+    \draw[thick] (worker1) edge[post] (workerX);
+    \draw[thick] (workerX) edge[post] (workerN);
+    \draw[thick] (workerN) edge[post] (out);
+\end{tikzpicture}
+\end{multicols}
+
+\begin{multicols}{2}
+
+\textbf{Pipeline Cerrado}
+
+Pipeline abierto conectado por un coordinador. El coordinador, produce los datos de entrada para $w_0$ y consume la salida de $w_n$.
+
+\columnbreak
+\begin{tikzpicture}
+    \node[circle,draw=none, minimum size=0.5cm] (in) at (0,0) {};
+    \node[circle,draw, minimum size=0.5cm] (worker0) at (1.2,0) {$w_0$};
+    \node[circle,draw, minimum size=0.5cm] (worker1) at (2.4,0) {$w_1$};
+    \node[circle,draw=none, minimum size=0.5cm] (workerX) at (3.6,0) {...};
+    \node[circle,draw, minimum size=0.5cm] (workerN) at (4.8,0) {$w_n$};
+    \node[ellipse,draw, minimum size=1cm] (coordinator) at (3,-1.2) {$cordinator$};
+
+    \draw[thick] (coordinator) edge[post, bend left=30] (worker0);
+    \draw[thick] (worker0) edge[post] (worker1);
+    \draw[thick] (worker1) edge[post] (workerX);
+    \draw[thick] (workerX) edge[post] (workerN);
+    \draw[thick] (workerN) edge[post, bend left=30] (coordinator);
+\end{tikzpicture}
+\end{multicols}
+
+\begin{multicols}{2}
+
+    \textbf{Pipeline Circular}
+    
+    La salida de $w_n$ está conectada a la entrada de $w_0$. Útil cuando la solución, no puede obtenerse en una sola pasada.
+    
+    \columnbreak
+    \begin{tikzpicture}
+        \node[circle,draw=none, minimum size=0.5cm] (in) at (0,0) {};
+        \node[circle,draw, minimum size=0.5cm] (worker0) at (1.2,0) {$w_0$};
+        \node[circle,draw, minimum size=0.5cm] (worker1) at (2.4,0) {$w_1$};
+        \node[circle,draw=none, minimum size=0.5cm] (workerX) at (3.6,0) {...};
+        \node[circle,draw, minimum size=0.5cm] (workerN) at (4.8,0) {$w_n$};
+    
+        \draw[thick] (worker0) edge[post] (worker1);
+        \draw[thick] (worker1) edge[post] (workerX);
+        \draw[thick] (workerX) edge[post] (workerN);
+        \draw[thick] (workerN) edge[post, bend left=60] (worker0);
+    \end{tikzpicture}
+\end{multicols}
+
+\section{Probes and echoes}
+
+La interacción entre procesos permite recorrer estructuras dinámicas, diseminando y recolectando información.
+
+La estructura de muchos programas distribuidos, puede verse como árboles o gráfos. En el cual, los procesos son nodos y los canales aristas.
+
+Una primitiva \textbf{\emph{probe}} es un mensaje enviado por un nodo, a todos sus sucesores. Mientras que, una primitiva \textbf{\emph{echo}} es su respectiva respuesta. Este paradigma, es el análogo al algoritmo Deep Search First (DFS).
+
+\textbf{Caso de uso}: Cuando se desea recorrer una red, de la cual no se conoce la cantidad de nodos $\rightarrow$ redes móviles.
+
+\section{Broadcasts}
+
+Los procesos suelen enviar mensajes a todos los demás, de forma paralela, mediante una primitiva \textbf{\emph{broadcast}}. 
+
+Dicha primitiva, no se asume atómica, por lo cual los procesos pueden recibir los mensajes en distinto orden al cual fueron enviados. La primitiva \textbf{\emph{receive}} funciona de manera tradicional, sobre el canal de cada proceso.
+
+\textbf{Caso de uso}: Mensaje broadcast en redes LAN.
+
+\section{Token passing}
+
+Lo procesos se pasan, entre sí, un token que garantiza el acceso exclusivo a un recurso compartido.
+
+\textbf{Caso de uso}: Exclusión mutua en ambientes distribuidos $\rightarrow$ Exclusión mutua con toke ring.
+
+\subsection{Exclusión mutua con toke ring}
+
+Existe un proceso \emph{helper} por cada proceso que quiera solicitar acceso a una SC. Los procesos \emph{helper}, esperan por una solicitud de acceso (\emph{entryRequest}).
+
+En caso de tener solicitudes pendientes (y poseer el token), concederán el acceso al proceso correspondiente (\emph{grant}). Luego, esperaran a recibir una solicitud de salida (\emph{exitRequest}).
+
+Una vez finalizada la atención, pasarán el token al proceso \emph{helper} siguiente.
+
+\begin{lstlisting}[multicols=2]
+# Exclusion mutua con toke ring (PMA).
+Chan token[n];
+Chan entryRequest[n];
+Chan exitRequest[n];
+Chan grant[n];
+
+Process Worker[i=1..n]
+while(true)
+    send entryRequest[i]();
+    receive grant[i]();
+    # Seccion Critica ...
+    send exitRequest[i];
+end;
+end;
+
+Process Helper[i=1..n]
+while(true)
+    receive token[i]();
+    if (!empty(entryRequest[i]))
+        receive entryRequest[i]();
+        send grant[i]();
+        receive exitRequest[i]();
+    end;
+    send token[(i mod n) + 1]();
+end;
+end;
+\end{lstlisting}
+
+\section{Servidores replicados}
+
+Los procesos servidores gestionan el acceso a un recurso. Al existir $n$ instancias del recurso, se replicará un servidor por cada una. También, puede utilizarse para abstraer a los clientes la cantidad real de recursos.
+
+\textbf{Caso de uso}: En el problema de los filósofos, estos le solicitan sus cubiertos (recursos) a un mozo (servidor). Los filósofos, desconocen la existencia de cubiertos ajenos.
 
 \end{document}
