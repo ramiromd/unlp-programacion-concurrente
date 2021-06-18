@@ -102,7 +102,7 @@ Por ejemplo: una solución es paralelizada sobre $P$ procesadores de dos maneras
 La solución regida por el speedup $S = P/2$ es la más escalable. Ya que, el valor de $E$ se mantiene constante al incrementar el número de procesadores.
 
 \section{Ley de Amdhal}
-
+   m            
 Un programa típico consta de 3 (tres) etapas; entrada de datos, cómputo y salida de resultados. 
 
 La ley de Amdhal postula que; para todo algoritmo \textbf{existe un speedup máximo alcanzable}, independiente del número de procesadores. Ese valor dependerá de la cantiadd de código paralelizable.
@@ -120,5 +120,21 @@ Por ejemplo: suponga un programa secuencial donde las etapas (1) y (2) consumen 
 El mejor speedup alcanzable es 5. Esto quiere decir que; el tiempo de ejecución, del algoritmo paralelizado, será como máximo hsta 5 veces más rápido ($100/5 = 20 ut$)
 
 \section{Granularidad}
+
+Cuando el número de procesadores crece, la carga de cómputo en cada unidad tiende a decrecer y las comunicaciones aumentan. Esta relación se conoce como \textbf{granularidad}.
+
+La granularidad de una aplicación o máquina paralela está dada por la relación entre el cómputo promedio y la comunicación promedio que realice.
+
+Si la granularidad del algoritmo difiere a la de la arquitectura, normalmente se tendrá pérdida de performance.
+
+{\renewcommand{\arraystretch}{2}%\
+\begin{center}
+\begin{tabular}{p{3cm} p{6cm} p{6cm}}
+& \textbf{Grano grueso} & \textbf{Grano fino} \\
+\textbf{Arquitectura} & Pocos CPU, con mayor capacidad de cómputo. & Muchos CPU, con menor capacidad de cómputo. \\
+\hline
+\textbf{Aplicación} & Pocos procesos, con responsabilidades más amplias $\rightarrow$ menor comunicación. & Muchos procesos, con responsabilidades más chicas $\rightarrow$ mayor comunicación. \\
+\end{tabular}
+\end{center}}
 
 \end{document}
