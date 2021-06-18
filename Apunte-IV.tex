@@ -1,0 +1,124 @@
+\documentclass[a4paper, 10pt]{report}
+\usepackage{common}
+\usetikzlibrary{petri,positioning}
+
+% Cuerpo
+\begin{document}
+
+% Carátula
+\title{
+    IV\\
+    Programación Paralela\\
+    \large Clase 10: Introducción a la Programación Paralela
+}
+\author{Ramiro Martínez D'Elía}
+\date{2021}
+\maketitle
+
+% Índice
+\tableofcontents
+
+\chapter{Conceptos}
+
+\section{Programa paralelo}
+
+Tipo de programa, concurrente, escrito para resolver un problema en menos tiempo que su análogo secuencial. El objetivo principal es reducir el tiempo de ejecución, o resolver problemas más grandes o con mayor precisión en el mismo tiempo.
+
+Un programa paralelo puede escribirse usando variables compartidas o pasaje de mensajes. La elección la dicta el tipo de arquitectura.
+
+Para determinar si una solución paralela tiene mejores prestaciones que su análogo secuencial, existen nociones como: \textbf{\emph{speedup}}, \textbf{\emph{eficiencia}}, \textbf{\emph{escalabilidad}}, y \textbf{\emph{ley de Amndhal}}.
+
+\section{Speedup}
+
+La métrica de speedup (o eficiencia) \textbf{evalúa el tiempo total de ejecución} de un programa. El speedup está dado por la siguiente fórmula:
+
+\begin{center}
+$S = Speedup = T_1 / T_p$
+\end{center}
+
+Donde $T_1$ es el tiempo de una solución secuencial ejecutando en 1 CPU y $T_p$ es el tiempo de una solución paralela con $p$ CPUs. 
+
+Del resultado obtenido, podemos concluir las siguientes afirmaciones:
+
+\begin{itemize}
+    \item Si $S = P \rightarrow $ speedup \textbf{\emph{lineal}} (o \textbf{\emph{perfecto}}).
+    \item Si $S < P \rightarrow $ speedup \textbf{\emph{sublineal}}
+    \item Si $S > P \rightarrow $ speedup \textbf{\emph{superlineal}}.
+\end{itemize}
+
+Por ejemplo, si el tiempo de una solución secuencial es de 600 segundos y el de una solución paralela es de 60 segundos utilizando 10 CPU.
+
+\begin{center}
+    $Speedup = T_1 / T_p = 600 / 60 = 10$
+
+    Como $S = P \rightarrow$ speedup lineal
+\end{center}
+
+\section{Eficiencia}
+
+Esta métrica permite conocer \textbf{qué tan bien aprovechará procesadores extras} un programa paralelo. La eficiencia, está dada por la siguiente fórmula:
+
+\begin{center}
+    $E = Eficiencia = Speedup / p$
+\end{center}
+
+Donde $p$ es la cantididad de CPUs. Del resultado obtenido, podemos concluir las siguientes afirmaciones:
+
+\begin{itemize}
+    \item Con speedup perfecto $\rightarrow E = 1$.
+    \item Con speedup sublineal $\rightarrow E < 1$.
+    \item Con speedup superlineal $\rightarrow E > 1$.
+\end{itemize}
+
+Por ejemplo, si el tiempo de una solución secuencial es de 600 segundos y el de una solución paralela es de 60 segundos utilizando 10 CPU.
+
+\begin{center}
+    $Speedup = T_1 / T_p = 600 / 60 = 10$
+\end{center}
+\begin{center}
+    $Eficiencia = Speedup / P = 10 / 10 = 1$
+\end{center}
+
+Como el speedup obtenido fue lineal ($S=P$), entonces se cumplió que $E=1$.
+
+\section{Escalabildiad}
+
+Las métricas de \textbf{speedup} y \textbf{eficiencia}, son \textbf{relativas}. Ellas dependen del número de procesadores, el tamaño de los datos y el algoritmo utilizado. Por esto, de forma general, se dice que \textbf{un programa paralelo es escalable si; su eficiencia se mantienen constante para un rango amplio de CPU}.
+
+Por ejemplo: una solución es paralelizada sobre $P$ procesadores de dos maneras. En la primera, el speedup está regido por la función $S = P-5$. Mientras que, en la otra $S = P/2$. ¿Qué solución se comportará más eficientemente al crecer $P$?
+
+{\renewcommand{\arraystretch}{2}%\
+\begin{center}
+\begin{tabular}{p{2cm} p{4cm} p{4cm}}
+\textbf{P} &  \textbf{S = P - 5} & \textbf{S = P / 2} \\
+6 & $(6-5)/6=1,66$ & $(6/2)/6=0,5$ \\
+\hline
+10 & $(10-5)/10=0,5$ & $(10/2)/10=0,5$ \\
+\hline
+20 & $(20-5)/20=0,75$ & $(10/2)/20=0,5$ \\
+\end{tabular}
+\end{center}}
+
+La solución regida por el speedup $S = P/2$ es la más escalable. Ya que, el valor de $E$ se mantiene constante al incrementar el número de procesadores.
+
+\section{Ley de Amdhal}
+
+Un programa típico consta de 3 (tres) etapas; entrada de datos, cómputo y salida de resultados. 
+
+La ley de Amdhal postula que; para todo algoritmo \textbf{existe un speedup máximo alcanzable}, independiente del número de procesadores. Ese valor dependerá de la cantiadd de código paralelizable.
+
+\begin{center}
+    $Limite = 1 / 1 - Paralelizable$
+\end{center}
+
+Por ejemplo: suponga un programa secuencial donde las etapas (1) y (2) consumen cada una el 10\% del tiempo de ejecución y no pueden ser paralelizadas. La etapa (3) consume el 80\% restante. Si el programa tarda 100 unidades de tiempo ($ut$), ¿cuál es el limite de mejora alcanzable?
+
+\begin{center}
+    $Limite = 1 / 1 - 0,8 = 1 / 0,2 = 5$
+\end{center}
+
+El mejor speedup alcanzable es 5. Esto quiere decir que; el tiempo de ejecución, del algoritmo paralelizado, será como máximo hsta 5 veces más rápido ($100/5 = 20 ut$)
+
+\section{Granularidad}
+
+\end{document}
