@@ -1,5 +1,6 @@
 \documentclass[a4paper, 10pt]{report}
 \usepackage{common}
+\usetikzlibrary{petri,positioning}
 
 % Cuerpo
 \begin{document}
@@ -745,6 +746,223 @@ bool TS(bool lock)
     lock = true; 
     return initial; >
 end;
+\end{lstlisting}
+
+\section{Desventajas}
+
+Los semáforos resultan un mecanismo de sincronización fundamental. Con ellos, podemos resolver cualquier problema de sincronización.
+
+No obstante, por naturaleza, son un mecanismo de bajo nivel. Un algoritmo que emplea semáforos posee las siguientes características que, pueden llevar a que el programador cometa errores.
+
+\begin{itemize}
+    \item Variables compartidas globales a los procesos.
+    \item Protocolos de entrada a secciones críticas, dispersas en el código.
+    \item Al agregar procesos, se debe verificar el acceso correcto a las variables compartidas.
+    \item La implementación de exclusión mutua y sincronización por condicion son similares, aunque los conceptos sean distintos.
+\end{itemize}
+
+\chapter{Soluciones con Monitores}
+
+\section{Introducción}
+
+Los monitores son módulos, del programa, que ofrecen una estructura que permite desarrollar programas concurrentes más limpios con respecto al uso de semáforos.
+
+Principalmente, los monitores, funcionan como una capa de abstracción de datos. Un monitor encapsula la representación de un objeto abstracto (o recurso) y ofrece un conjunto de operaciones para manipularlo.
+
+
+\begin{tikzpicture}
+    \node[] () at (0.5,0.5) {}; %space
+    \node[] at (10,-1) {Procesos Concurrentes};
+    \node[circle,draw, minimum size=1cm] (P0) at (0,-1) {$P_0$};
+    \node[circle,draw, minimum size=1cm] (P1) at (2,-1) {$P_1$};
+    \node[circle,draw, minimum size=1cm] (Px) at (4,-1) {$...$};
+    \node[circle,draw, minimum size=1cm] (Pn) at (6,-1) {$Pn$};
+    \draw (-1,-3) -- (7,-3) -- (7,-5) -- (-1, -5) -- cycle;
+    \node[] at (10,-4) {Tipo de dato abstracto};
+    \node[draw, fill=white](interface) at (3,-3) {Interface};
+    \draw[thick] (P0) edge[post] (interface);
+    \draw[thick] (P1) edge[post] (interface);
+    \draw[thick] (Px) edge[post] (interface);
+    \draw[thick] (Pn) edge[post] (interface);
+    \node[ellipse,draw, minimum size=1cm] (SharedData) at (1, -4) {Shared Data};
+    \node[ellipse,draw, minimum size=1cm] (SyncData) at (5, -4) {Sync Data};
+\end{tikzpicture}
+
+
+\section{Sintáxis y Semántica}
+
+Un monitor es utilizado para agrupar la representación e implementación de un recurso compartido (class). La especificación de un monitor consta de las siguientes partes:
+
+\begin{itemize}
+    \item \textbf{Interface}: Especifica las operaciones provistas por el recurso.
+    \item \textbf{Cuerpo}: Contiene las variables que representan al recurso y procedimientos que implemetan las operaciones de la interfaz.
+\end{itemize}
+
+\begin{lstlisting}
+Monitor Example
+
+# Declracion de variables permanentes.
+# Inicializacion de variables.
+
+procedure op_test(formals)
+    # Body ...
+end;
+End.
+\end{lstlisting}
+
+Las \textbf{\emph{variables permanentes}} son compartidas por todos los procedimientos dentro del monitor. Son llamadas permanentes, porque existen y consevan sus valores durante todo el ciclo de vida de un monitor. Ellas son inicializadas antes de cualquier llamado a procedimientos.
+
+Los \textbf{\emph{procedimientos}}, tienen acceso a las variables permanentes, parámetros formales y sus variables locales. Estas últimas, son copiadas e inicializadas en cada llamado al procedimiento.
+
+La principal ventaja, del uso de monitores, es que pueden ser desarrollados de manera aislada al programa que los vaya a utilizar.
+
+\section{Sincronización}
+
+En monitores, a lo sumo \textbf{un procedimiento} puede estar \textbf{activo a la vez}. Un procedimiento se considera activo, cuando un proceso externo se encuentra ejecutando alguna de sus sentencias. 
+
+De esta forma, la \textbf{\emph{exclusión mutua}} se garantiza de forma \textbf{implícita}. Esto hace los algoritmos más fáciles de leer ya que, no hay protocolos de entrada y salida explícitos.
+
+En contraste, la \textbf{\emph{sincronización por condición}} debe ser especificada de forma \textbf{explícita}. Esto se debe a que, las condiciones son diferentes en cada programa.
+
+\subsection{Variables condición}
+
+Una variable condición es utilizada para demorar un proceso que no puede continuar ejecutandose, de forma segura, hasta que algún estado del minitor satisfaga una condición. 
+
+También son usadas para despertar procesos demorados, cuando la condición se vuelva verdadera. 
+
+Este tipo de variables, solo pueden ser utilizadas dentro de un monitor. Y su declaración, sigue la siguiente forma:
+
+\begin{lstlisting}
+cond vc;
+\end{lstlisting}
+
+Internamente el valor de \lstinline{vc} es el de una cola, inicialmente vacía. El programador no manipula directamente la cola, sino que lo hace mediante operaciones especiales.
+
+\begin{itemize}
+    \item \lstinline{empty}: Retorna \lstinline{true} si la cola está vacía. Retornará \lstinline{false}, en caso contrario.
+    \item \lstinline{wait}: Causa la demora del proceso en ejecución y lo agrega a la cola.
+    \item \lstinline{signal}: Despierta procesos demorados y los retira de la cola.
+\end{itemize}
+
+Si bien, es posible definir una política de prioridades a la cola de procesos demorados; el comportamiento por defecto es el de una política FIFO. De esta forma: \lstinline{wait} colocará procesos al final de la cola y \lstinline{signal} desperatá al proceso que este en el frente.
+
+\section{Disciplinas de señalización}
+
+Cuando un proceso ejecuta \lstinline{signal}, se encuentra dentro de un monitor y por consiguiente tiene el control del lock implícito asociado al monitor. 
+
+Dicha situación plantea un dilema. Si \lstinline{signal} despierta a otro proceso, ahora tendremos 2 (dos) procesos ejecutandose dentro del monitor y por definición, solo un proceso debe tener acceso exclusivo al monitor.
+
+Ante la situación planteada, podemos adoptar alguna de las siguientes políticas:
+
+\begin{enumerate}
+    \item \textbf{\emph{Signal and Continue (SC)}}: El proceso \emph{señalizador} continua su ejecución. El proceso \emph{señalizado}, espera a que se libere el monitor para continuar.
+    \item \textbf{\emph{Signal and Wait (SW)}}: El proceso \emph{señalizado} continua su ejecución. El proceso \emph{señalizador}, espera a que se libere el monitor para continuar.
+\end{enumerate}
+
+\section{Sincronización básica por condición}
+
+\subsection{Buffers limitados}
+
+\begin{itemize}
+    \item \lstinline{not_full} $\rightarrow$ señaliza \lstinline{count < n}
+    \item \lstinline{empty} $\rightarrow$ señaliza \lstinline{count > 0}
+\end{itemize}
+
+\begin{lstlisting}[multicols=2]
+monitor BoundedBuffer
+
+typeT   buffer[n];
+int     front = 0,
+        rear = 0,
+        count = 0;
+cond    not_full,
+        not_empty;
+
+procedure deposit(typeT data)
+    while(count == n) wait(not_full);
+    buffer[rear] = data;
+    rear = (rear + 1) % 10;
+    count++;
+    signal(not_empty)
+end;
+
+procedure fetch(typeT &result)
+    while(count == 0) wait(not_empty);
+    result = buffer[front];
+    front = (front + 1) % n;
+    count--;
+    signal(not_full);
+end;
+
+End.
+\end{lstlisting}
+
+
+\section{Broadcast}
+
+\subsection{Lectores y Escritores}
+
+\begin{itemize}
+    \item \lstinline{oktoread} $\rightarrow$ señaliza \lstinline{nw == 0}
+    \item \lstinline{oktowrite} $\rightarrow$ señaliza \lstinline{nw == 0 && nr == 0}
+    \item \lstinline{signal_all} $\rightarrow$ despierta a todos (broadcast)
+\end{itemize}
+
+\begin{lstlisting}[multicols=2]
+monitor RW_Controller
+
+int nr = 0, nw = 0;
+cond oktoread, oktowrite;
+
+procedure request_read()
+    while (nw > 0) wait(oktoread);
+    nr = nr + 1;
+end;
+
+procedure release_read()
+    nr = nr - 1;
+    if (nr == 0) signal(oktowrite);
+end;
+
+
+procedure request_write()
+    while (nr > 0 || nw > 0) 
+        wait(oktowrite);
+    nw = nw + 1;
+end;
+
+procedure release_write()
+    nw = nw - 1;
+    signal(oktowrite);
+    signal_all(oktoread);
+end;
+End.
+\end{lstlisting}
+
+\section{Priority Wait}
+
+\subsection{Shortest Job Next Allocation (SJN)}
+
+\begin{itemize}
+    \item Se maneja la cola con una politica SJN, en lugar de FIFO.
+\end{itemize}
+
+\begin{lstlisting}[multicols=2]
+monitor SJN
+
+bool free = true,
+cond turn;
+
+procedure request(int time)
+    if (free) free = false;
+    else wait(turn, time)
+end;
+
+procedure release()}
+    if (empty(turn)) free = true;
+    else signal(turn);
+end;
+End.
 \end{lstlisting}
 
 \end{document}
