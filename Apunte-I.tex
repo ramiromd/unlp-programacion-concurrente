@@ -422,14 +422,14 @@ End.
 
 Una propiedad, en un programa concurrente, es un atributo que debe ser cierto en cada historia posible del programa. Existen 2 (dos) grandes categorías, de propiedades.
 
-La primera, es la de \textbf{\emph{seguridad (safety)}}. La cual, debe asegurar que nada malo ocurra durante la ejecución; para garantizar que el correcto estado final del programa. Dos propiedades fundamentales, dentro de esta categoría, son:
+La primera, es la de \textbf{\emph{seguridad (safety)}}. La cual, asegura que nada malo ocurra durante la ejecución; para garantizar que el correcto estado final del programa. Dos propiedades fundamentales, dentro de esta categoría, son:
 
 \begin{enumerate}
     \item \textbf{\emph{Exclusión mutua}}: El evento negativo, en este caso, sería que 2 (dos) o más programas; accedan a la misma sección crítica en el mismo instante de tiempo.
     \item \textbf{\emph{Ausencia de deadlock}}: El evento negativo, en este caso, sería que un proceso quede demorado, esperando por una condición que nunca será verdadera. 
 \end{enumerate}
 
-La segunda, es la de \textbf{\emph{vida (liveness)}}. La cual, debe asegurar que eventualmente algo bueno ocurrirá; para garantizar la correcta terminación del programa. Por ejemplo:
+La segunda, es la de \textbf{\emph{vida (liveness)}}. La cual, asegura que eventualmente algo bueno ocurrirá; para garantizar la correcta terminación del programa. Por ejemplo:
 
 \begin{enumerate}
     \item Que todo mensaje, eventualmente, sea recibido por su receptor.
