@@ -189,7 +189,125 @@ Falso: la única forma de que ocurra es que $x=1$ cuando se ejecute P3. Esto no 
 \end{answered}
 \end{enumerate}
 
-\end{QandA}
+%=====================================================================================================
+
+\item ¿En qué consiste la comunicación guardada (introducida por CSP) y cuál es su utilidad?
+\begin{answered}
+    \emph{Apunte III: sección 3.1}
+\end{answered}
+
+%=====================================================================================================
+
+\item ¿Cuál es la utilidad de la técnica de passing the baton? ¿Qué relación encuentra con la técnica de passing the condition?
+\begin{answered}
+    \emph{Apunte II: sección 3.5}
+\end{answered}
+
+%=====================================================================================================
+
+\item Explique sintéticamente los 7 paradigmas de interacción entre procesos en programación distribuida. Ejemplifique.
+\begin{answered}
+    \emph{Apunte III: capitulo 5}
+\end{answered}
+
+%=====================================================================================================
+
+\item Responder sobre programación paralela
+\begin{enumerate}
+    \item ¿Cuál es el objetivo de la programación paralela?
+    \begin{answered}
+        \emph{Apunte IV: sección 1.1}
+    \end{answered}
+    \item Defina las métricas de speedup y eficiencia. ¿Cuál es el significado de cada una de ellas (que miden)? ¿Cuál es el rango de valores para cada una?
+    \begin{answered}
+        \emph{Apunte IV: sección 1.2 y sección 1.3}
+    \end{answered}
+    \item ¿En qué consiste la ley de Amdahl?
+    \begin{answered}
+        \emph{Apunte IV: sección 1.5}
+    \end{answered}
+\end{enumerate}
+
+%=======================================================================================================
+
+\item Suponga que quiere ordenar N números enteros utilizando pasaje de mensajes con el siguiente algoritmo (odd/even Exchange sort): Hay  n procesos P [1: n], con n par. Cada proceso ejecuta una serie de rondas. En las rondas impares, los procesos con número impar P[impar] intercambian valores con P [impar +1] si los números están desordenados. En las rondas pares, los procesos con numero par P[par] intercambian valores con P [par +1] si los números están desordenados (P [1] y P[n] no hacen nada en las rondas pares).
+\begin{enumerate}
+\item Determine cuantas rondas deben ejecutarse en el peor caso para ordenar los números.
+\begin{answered}
+El peor de los casos es que los números estén ordenados de mayor a menor (o viceversa). En dicho caso, haran falta $n$ rondas para intercambiar todos los valores.
+\\
+Por ejemplo, para la siguiente lista ${6,5,4,3,2,1}$ con $n=6$.
+\\
+$R_1 = 6_1 \rightarrow 5_2 4_3 \rightarrow 3_4 2_5 \rightarrow 1_6$
+\\
+$R_2 = 5_1 6_2 \rightarrow 3_3 4_4 \rightarrow 1_5 2_6$
+\\
+$...$
+\\
+$R_6 = 1_1 3_2 \rightarrow 2_3 5_4 \rightarrow 4_5 6_6$
+\end{answered}
+\item ¿Considere que es más adecuado para este caso, si pasaje de mensajes sincrónico o asincrónico? Justifique.
+\begin{answered}
+Debido a que los procesos deben sincronizar entre pares, PMS parece una mejor opción. Ya que, la primitiva send es bloquante y genera una barrera de forma implícita.
+\\
+De utilizar PMA, habría que implementar una barrera entre pares de procesos de forma explícita.
+\end{answered}
+\end{enumerate}
+\item Escriba un algoritmo paralelo para ordenar el arreglo a [1: n] en forma ascendente. ¿Cuántos mensajes se utilizan? 
+\begin{answered}
+\begin{minipage}[t]{.5\linewidth}
+\begin{lstlisting}
+Process P1
+const mayor = n/2;
+int nuevo,
+    a1[1:n/2];
+
+# ordenar a1 de forma ascendente
+
+P2 ! (a1[mayor]);
+P2 ? (nuevo);
+
+do (true) a1[mayor] > nuevo ->
+    # reordenar a1:
+    # decartando a1[mayor]
+    P2 ! (a1[mayor]);
+    P2 ? (nuevo)
+od
+end;
+\end{lstlisting}
+\end{minipage}
+\begin{minipage}[t]{.5\linewidth}
+\begin{lstlisting}
+Process P2
+const menor = 1;
+int nuevo,
+    a1[1:n/2];
+
+# ordenar a1 de forma ascendente
+
+P1 ? (nuevo);
+P1 ! (a1[menor]);
+
+do (true) a1[menor] < nuevo ->
+    # reordenar a1:
+    # descartando a1[menor]
+    P1 ? (nuevo);
+    P1 ! (a2[menor]);
+od
+end;
+\end{lstlisting}
+\end{minipage}
+
+Notar como las líneas 14 y 15 generan una barrera entre procesos. (agregar un dibujo como el del cuaderno)
+\end{answered}
+\begin{enumerate}[label=\alph*)]
+\item ¿Cuántos mensajes intercambian en el mejor de los casos? ¿Y en el peor de los casos?
+\begin{answered}
+En el mejor de los casos, la lista ya se encuentra ordenada, solo se intercambiarán 2 valores (uno cada proceso). Los valores enviados, no satisfacen la condición del do.
+
+En el peor de los casos, la lista esta ordenada de mayor a menor, todos los valores son intercambiados ($n/2$ cada proceso). Esto implica un total de $n$ mensajes.
+\end{answered}
+\end{enumerate}
 
 {\large \textbf{\\Implemente una solución, paralela, al problema de multiplicación de matrices de $n*n$ con $P<n$}}
 
