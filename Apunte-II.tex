@@ -411,9 +411,13 @@ Si \emph{n} no fuese potencia de 2, podría utilizarse el siguiente \emph{n} pot
 
 La mayoría de los protocolos implementados por \textbf{\emph{busy waiting}} son \textbf{\emph{complejos}} y la \textbf{\emph{separación entre variables}}, utilizadas para la sicronización y para cómputo general, es \textbf{\emph{poco clara}}.
 
-Otro defecto es la \textbf{\emph{ineficiencia}} de los protocolos de busy waiting \textbf{\emph{en la mayoria de los programas multihilos}} Excepto para el caso de los programas paralelos donde el número de procesos concuerde con el número de procesadores. No obstante, usualmente, existen más procesos que procesadores y \textbf{\emph{resulta menos productivo otorgar CPU a procesos para que hagan spinning en lugar de cómputo}}.
+Otro defecto es la \textbf{\emph{ineficiencia}} de los protocolos de busy waiting \textbf{\emph{en la mayoria de los programas multihilos}}. Excepto para el caso de los programas paralelos donde el número de procesos concuerde con el número de procesadores. 
 
-El concepto de la sincronización es fundamental en los programas concurrentes. Por esto, es deseable tener herramientas especiales para el diseño de protocolos de sincronización correctos (\textbf{\emph{semáforos}} y \textbf{\emph{monitores}}).
+No obstante, usualmente, existen más procesos que procesadores y \textbf{\emph{resulta menos productivo otorgar CPU a procesos para que hagan spinning en lugar de cómputo}}.
+
+La eficiencia es fundamental, en los programas concurrentes, por esto es deseable tener herramientas más eficientes, para el desarrollo de aplicaciones concurrentes, como: \textbf{\emph{semáforos}} y \textbf{\emph{monitores}}. 
+
+Con este tipo de herramientas, los procesos demorados no ocupan tiempo CPU hasta que no tengan la posibilidad de ejecutarse. En cuyo caso, serán colocados en una cola de listos.
 
 \chapter{Soluciones con semáforos}
 \vspace*{-10mm}
