@@ -369,7 +369,7 @@ Para especificar sincronización por \textbf{\emph{por condicón}}, podemos empl
 
 La acción anterior, es una \textbf{\emph{acción atómica condicional}}. Ya que; posee una guarda.
 
-Por último, si la condicón de guarda satisface ASV. Podremos implementar el \textbf{\emph{await}} mediante \textbf{\emph{busy waiting}} o \textbf{\emph{spin loops}}.
+Si la condición de guarda satisface ASV. Podremos implementar el \textbf{\emph{await}} mediante \textbf{\emph{busy waiting}} o \textbf{\emph{spin loops}}.
 
 \begin{multicols}{2}
 \begin{lstlisting}
@@ -386,6 +386,8 @@ SpinLoop
 End.
 \end{lstlisting}
 \end{multicols}
+
+En otros casos, para lograr implementaciones atómicas del await, necesitaremos instrucciones del tipo \textbf{Fetch \& Add} o \textbf{Test \& Set}. Con las cuales, poder construir protocolos de E/S para secciones críticas.
 
 \subsection{Ejemplo Productores/Consumidores}
 
