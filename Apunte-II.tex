@@ -664,7 +664,7 @@ Resolveremos el mismo problema, de lectores y escritores, de la sección anterio
 
 Si bien este algoritmo, sigue priorizando a los lectores; podremos modificar a \textbf{\emph{SIGNAL}} para darle la política que quisieramos.
 
-\begin{lstlisting}
+\begin{lstlisting}[multicols=2]
 int nr = 0,  # Lectores activos
     nw = 0;  # Escritores activos
 
@@ -674,7 +674,7 @@ int dr = 0, # Lectores demorados
 sem e = 1,  # Baton
     r = 0,  # Demora lectores
     w = 0;  # Demora escritores
-            # SBS: Siempre 0 <= (e+r+w) <= 1
+            # SBS: 0<=(e+r+w)<=1
 
 SIGNAL:
     if (nw == 0 & nr > 0)
@@ -726,6 +726,56 @@ End.
 
     Ambas técnicas poseen la misma finalidad. Solo que, Passing the condition es utilizada en Monitores.
 \end{basic_box}
+
+\subsection{Alocación de recursos - SJN}
+
+En los problemas de alocación de recursos, se deben implementar políticas de acceso generales a un recurso compartido por los procesos.
+
+Dichas políticas deben contemplar: cuándo se le puede dar acceso a un proceso y cuál proceso toma el recurso si hubiese más de uno esperando.
+
+Como su nombre lo indica, una política de \textbf{\emph{Short Job Next}} le otorga el recurso al proceso en espera con menor valor de tiempo (el más corto). Su semántica, es la siguiente:
+
+\begin{itemize}
+    \item \lstinline{request(time, id)}: Un proceso solicita el acceso. Si el recurso está libre, se le otorga. Caso contrario, se coloca al proceso en una lista de espera.
+    \item \lstinline{release}: Un proceso libera el recurso. Si hay procesos en espera se otorga, el recurso, al proceso con valor de tiempo más chico. Caso contrario, el recurso queda libre.
+\end{itemize}
+
+Este problema puede ser implementado, utilizando la técnica Passing the baton de la siguiente manera:
+
+\begin{multicols}{2}
+
+\begin{lstlisting}
+request(time, id):
+    P(e);   # mutex sobre free
+    if (not free) DELAY;
+    free = false;
+    SIGNAL;
+
+release():
+    P(e);   # mutex sobre free
+    libre = true;
+    SIGNAL;
+\end{lstlisting}
+
+\columnbreak
+
+En \textbf{DELAY} un proceso:
+\begin{itemize}
+    \item Se coloca en una lista de espera.
+    \item Libera SC ejecutando \lstinline{V(e)}.
+    \item Demora en un semáforo \lstinline{b[id]}.
+\end{itemize}
+
+En \textbf{SIGNAL} un proceso:
+\begin{itemize}
+    \item Cuando se libera el recurso, se le asigna al próximo proceso en espera si lo hubiera.
+\end{itemize}
+\end{multicols}
+
+
+Esta política minimiza el tiempo promedio de ejecución pero, \textbf{no es una solución fair}. Procesos con un tiempo mayor, pueden quedar relegados ante la aparición de procesos con tiempo menor. 
+
+Dicha desventaja se puede evitar, implementando políticas de \textbf{aging}. Es decir controlando, también, el tiempo en el que un proceso estuvo en lista de espera.
 
 \section{Instrucciones máquina utilizadas}
 
