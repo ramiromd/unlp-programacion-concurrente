@@ -1,5 +1,12 @@
-\documentclass[a4paper, 10pt]{report}
+\documentclass[a4paper, 10pt]{article}
 \usepackage{common}
+\usepackage{enumitem}
+\newenvironment{QandA}{
+    \begin{enumerate}\bfseries}
+    {\end{enumerate}
+}
+\newenvironment{answered}{\par\normalfont}{}
+\pagestyle{empty}
 
 \begin{document}
     
@@ -14,7 +21,177 @@
 \date{2021}
 \maketitle
 
-{\large \textbf{Implemente una solución, paralela, al problema de multiplicación de matrices de $n*n$ con $P<n$}}
+\noindent%
+\begin{QandA}
+\item Defina programa concurrente, programa paralelo y programa distribuido.
+\begin{answered}
+    \emph{Apunte I: sección 1.1, Apunte II: sección 1.1 y Apunte IV: 1.1}
+\end{answered}
+
+%========================================================================
+
+\item Responda
+\begin{enumerate}[label=\alph*)]
+\item ¿A qué se denomina propiedad del programa? ¿Qué son las propiedades de seguridad y vida? Ejemplificar.
+\begin{answered}
+    \emph{Apunte I: sección 1.1, Apunte II: sección 1.1 y Apunte IV: 1.1}
+\end{answered}
+\item Defina fairness. Relacionar dicho concepto con las políticas de scheduling.
+\begin{answered}
+    \emph{Apunte I: sección 1.7}
+\end{answered}
+\item Describa los distintos tipos de fairness
+\begin{answered}
+    \emph{Apunte I: sección 1.8}
+\end{answered}
+\item ¿Cuáles son las propiedades que debe cumplir un protocolo de E/S a una sección crítica?
+\begin{answered}
+    \emph{Apunte II: sección 1.2}
+\end{answered}
+\item Cuáles son los defectos que presenta la sincronización por busy waiting? Diferencie esta situación respecto de los semáforos.
+\begin{answered}
+    \emph{Apunte II: sección 2.3}
+\end{answered}
+\item Explique la semántica de la instrucción de grano grueso  AWAIT y su relación con las instrucciones Test \& Set o Fetch \& Add.
+\begin{answered}
+    \emph{Apunte I: sección 1.6}
+\end{answered}
+\end{enumerate}
+
+%===================================================================================================
+
+\item Definir el problema general de alocación de recursos y su resolución mediante una política SJN. ¿Minimiza el tiempo promedio de espera? ¿Es fair? Si no lo es, plantee una alternativa que lo sea.
+\begin{answered}
+    \emph{Apunte II: sección 3.5.2}
+\end{answered}
+
+%===================================================================================================
+
+\item ¿En qué consiste la técnica de passing the baton? Aplicar este concepto a la resolución del problema de lectores y escritores.
+\begin{answered}
+    \emph{Apunte II: sección 3.5 y 3.5.1}
+\end{answered}
+
+%===================================================================================================
+
+\item Explique el concepto de broadcast y sus dificultades de implementación en un ambiente distribuido, con pasaje de mensajes sincrónico y asincrónico.
+\begin{answered}
+\emph{Sobre primitiva broadcast $\rightarrow$ Apunte III: sección 2.1.4}
+
+En un ambiente con memoria compartida, este tipo de primitivas es más sencilla de implementar. 
+
+En ambientes distribuidos, al no haber variables compartidas, se debe utilizar Pasaje de Mensajes. Esto, supone ciertas dificultades para cada caso.
+
+Con PMA:
+\begin{itemize}
+    \item Utilizar un único canal. El emisor deberá enviar tantos mensajes, como receptores existan. $\rightarrow$ Evita demoras inecesarias.
+    \item Un canal por proceso. El emisor deberá enviar el mensaje por tantos canales, como receptores existan. $\rightarrow$ Causa demoras innesecarias: un proceso listo debe esperar a que el emisor itere sobre su canal. 
+\end{itemize}
+
+Con PMS:
+
+Los canales son punto a punto. Por este motivo, solo podemos llevar a cabo la implementación PMA(2). Aunque, en este caso, resulte aún más ineficiente ya que \lstinline{send} causa demora.
+\end{answered}
+
+%====================================================================================================
+
+\item Sobre exclusión mutua selectiva
+
+\begin{enumerate}[label=\alph*)]
+\item ¿Por qué el problema de los filósofos es de exclusión mutua selectiva? Si en lugar de 5 filósofos fueran 3, ¿el problema seguiría siendo de exclusión mutua selectiva? ¿Por qué?
+\begin{answered}
+    \emph{Apunte II: sección 3.4.1}
+\end{answered}
+\item El problema de los filósofos resuelto de forma centralizada y sin posiciones fijas ¿es de exclusión mutua selectiva? ¿Por qué?
+\begin{answered}
+    \emph{Apunte II: sección 3.4.1}
+\end{answered}
+\item El problema de los lectores-escritores es de exclusión mutua selectiva? ¿Porque?
+\begin{answered}
+    \emph{Apunte II: sección 3.4.2}
+\end{answered}
+\item Si en el problema de los lectores-escritores se acepta sólo 1 escritor  o 1 lector en la BD, ¿tenemos un problema de exclusión mutua selectiva?  ¿Por qué?
+\begin{answered}
+    \emph{Apunte II: sección 3.4.2}
+\end{answered}
+\end{enumerate}
+
+%=====================================================================================================
+
+\item Sea el problema en el cual N procesos poseen inicialmente cada uno un valor V, y el objetivo es que todos conozcan cual es el máximo y cuál es el mínimo de todos los valores.
+
+\begin{enumerate}[label=\alph*)]
+\item Plantee conceptualmente posibles soluciones con las siguientes arquitecturas de red: Centralizada, simétrica y anillo circular. No implementar.
+\begin{answered}
+    \emph{Apunte III: sección 2.1}
+\end{answered}
+\item Analice las soluciones anteriores desde el punto de vista del número de mensajes y la performance global del sistema.
+\begin{answered}
+    \emph{Apunte II: sección 2.1.4}
+\end{answered}
+\end{enumerate}
+
+%======================================================================================================
+
+\item Defina el concepto de granularidad. ¿Qué relación existe entre la granularidad de programas y de procesadores?
+\begin{answered}
+    \emph{Apunte IV: sección 1.6}
+\end{answered}
+
+%========================================================================================================
+
+\item Dado el siguiente programa concurrente con memoria compartida, y suponiendo que todas las variables están inicializadas en 0 al empezar el programa, y que las instrucciones no son atómicas. Para cada una de las opciones indique verdadero o falso. En caso de ser verdadero indique el camino de ejecución para llegar a ese valor y de ser falso justifique claramente su respuesta.
+
+\begin{multicols}{3}
+\begin{lstlisting}
+P1::            
+If ( x == 0 ) then
+    Y = 4*x+2;
+    X = y+2+x;
+\end{lstlisting}
+\columnbreak
+\begin{lstlisting}
+P2::            
+If ( x > 0 ) then
+    X = X + 1;
+\end{lstlisting}
+\columnbreak
+\begin{lstlisting}
+P3::            
+X = x*8+x*2+1;
+\end{lstlisting}
+\end{multicols}
+
+\begin{enumerate}[label=\alph*)]
+\item El valor de x al terminar el programa es 9.
+\begin{answered}
+\emph{Instrucciones no atómicas $\rightarrow$ los bloques IF pueden ser interrumpidos\\} 
+Verdadero para la siguiente historia:\\
+$P1_2 \rightarrow P2 \rightarrow P3 (x=1) \rightarrow P1_3 (y=2) \rightarrow P1_4 (x=9)$
+\end{answered}
+\item El valor de x al terminar el programa es 6.
+\begin{answered}
+Verdadero para la siguiente historia:\\
+$P1_2 \rightarrow P1_3 (y=2) \rightarrow P3 (x=1) \rightarrow P1_4 (x=5) \rightarrow P2 (x=6)$
+\end{answered}
+\item El valor de x al terminar el programa es 11.
+\begin{answered}
+Falso: la única forma de que ocurra es que $x=1$ cuando se ejecute P3. Esto no puede darse, ya que P2 nunca podría incrementar con $x=0$ y P1 escribe valores mayores sobre $x$.
+\end{answered}
+\item Y, siempre termina con alguno de los siguientes valores: 10 o 6 o 2 o 0.
+\begin{answered}
+\begin{itemize}
+\item $y=10$ con $P1_2 \rightarrow P3 (x=1) \rightarrow P2 (x=2) \rightarrow P1_3 (y=10) \rightarrow P1_4 (x=8)$
+\item $y=6$ con $P1_2 \rightarrow P2 \rightarrow P3 (x=1) \rightarrow P1_3 (y=6) \rightarrow P1_4 (x=9)$
+\item $y=2$ con cualquier historia que inicie con $P1_2 \rightarrow P1_3$. Una vez seteado $y$, ningún otra instrucción la modifica.
+\item $y=0$ con cualquier historia que inicie con $P3$. Ya que $x=1$ invalidará el if de P1.
+\end{itemize}
+\end{answered}
+\end{enumerate}
+
+\end{QandA}
+
+{\large \textbf{\\Implemente una solución, paralela, al problema de multiplicación de matrices de $n*n$ con $P<n$}}
 
 Si el número de procesos es menor que \emph{n}, no podremos asignar una fila a cada proceso. En su lugar, debemos hacer que cada proceso trabaje con una porción (\emph{strpe}) del arreglo.
 
