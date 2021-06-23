@@ -1,0 +1,83 @@
+\item Escriba un algoritmo paralelo para ordenar el arreglo a [1: n] en forma ascendente.
+\begin{enumerate}
+\item Implementar
+\begin{answered}
+\begin{minipage}[t]{.5\linewidth}
+\begin{lstlisting}
+
+\end{lstlisting}
+\end{minipage}
+\begin{minipage}[t]{.5\linewidth}
+\begin{lstlisting}
+
+\end{lstlisting}
+\end{minipage}
+
+Notar como las líneas 14 y 15 generan una barrera entre procesos. (agregar un dibujo como el del cuaderno)
+\end{answered}
+\item ¿Cuántos mensajes intercambian en el mejor de los casos? ¿Y en el peor de los casos?
+\begin{answered}
+En el mejor de los casos, la lista ya se encuentra ordenada, solo se intercambiarán 2 valores (uno cada proceso). Los valores enviados, no satisfacen la condición del do.
+
+En el peor de los casos, la lista esta ordenada de mayor a menor, todos los valores son intercambiados ($n/2$ cada proceso). Esto implica un total de $n$ mensajes.
+\end{answered}
+\end{enumerate}
+
+\item Suponga que quiere ordenar N números enteros utilizando pasaje de mensajes con el siguiente algoritmo (odd/even Exchange sort): Hay  n procesos P [1: n], con n par. Cada proceso ejecuta una serie de rondas. En las rondas impares, los procesos con número impar P[impar] intercambian valores con P [impar +1] si los números están desordenados. En las rondas pares, los procesos con numero par P[par] intercambian valores con P [par +1] si los números están desordenados (P [1] y P[n] no hacen nada en las rondas pares).
+\begin{enumerate}
+\item Determine cuantas rondas deben ejecutarse en el peor caso para ordenar los números.
+\begin{answered}
+El peor de los casos es que los números estén ordenados de mayor a menor (o viceversa). En dicho caso, haran falta $n$ rondas para intercambiar todos los valores.
+\\
+Por ejemplo, para la siguiente lista ${6,5,4,3,2,1}$ con $n=6$.
+\\
+$R_1 = 6_1 \rightarrow 5_2 4_3 \rightarrow 3_4 2_5 \rightarrow 1_6$
+\\
+$R_2 = 5_1 6_2 \rightarrow 3_3 4_4 \rightarrow 1_5 2_6$
+\\
+$...$
+\\
+$R_6 = 1_1 3_2 \rightarrow 2_3 5_4 \rightarrow 4_5 6_6$
+\end{answered}
+\item ¿Considere que es más adecuado para este caso, si pasaje de mensajes sincrónico o asincrónico? Justifique.
+\begin{answered}
+Debido a que los procesos deben sincronizar entre pares, PMS parece una mejor opción. Ya que, la primitiva send es bloquante y genera una barrera de forma implícita.
+\\
+De utilizar PMA, habría que implementar una barrera simétrica entre pares de procesos.
+\end{answered}
+
+\item ¿Cómo modificaría el algoritmo del punto c para que termine tan rápido como el arreglo este ordenado? ¿Esto agrega overhead de mensajes? De ser así, ¿Cuánto?
+\begin{answered}
+Podemos utilizar un proceso coordinador, al cual todos los procesos le notifican si realizaron cambios luego de una ronda. Si el coordinador detecta que, no hubo cambios le comunica a los procesos que ya terminaron la tarea.
+
+Esto agrega un overhead de mensajes: $n$ mensajes son enviados al coordinador (1 por proceso) y $n$ mensajes son enviados desde el coordinador (1 a cada proceso). Esto nos da un overhead de $2*n$ en cada ronda.
+\end{answered}
+\item Implemente una solución general a $k$ procesos con $n$ múltiplo de $k$
+
+\item ¿Cuántos mensajes intercambia en el mejor caso? ¿Y en el peor de los casos?
+\end{enumerate}
+
+
+{\large \textbf{\\Implemente una solución, paralela, al problema de multiplicación de matrices de $n*n$ con $P<n$}}
+
+Si el número de procesos es menor que \emph{n}, no podremos asignar una fila a cada proceso. En su lugar, debemos hacer que cada proceso trabaje con una porción (\emph{strpe}) del arreglo.
+
+\begin{lstlisting}
+Process[w = 1..P]
+
+# El proceso w, procesara las filas first a last
+int first = (w-1) * (n/p) + 1;
+int last = first + n/p - 1;
+
+for(a_row = first to last)
+
+    for [b_col = 1 to n]
+        # Inicializamos la celda acumuladora de C.
+        c[a_row, b_col] = 0;
+
+        # Iteramos entre las columnas (A) y filas (B) de interes.
+        for [k = 1 to n]
+            c[a_row, b_col] = c[a_row, b_col] + (a[a_row, k] * b[k, b_row]);
+end;
+End;
+\end{lstlisting}
