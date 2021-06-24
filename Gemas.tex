@@ -364,6 +364,8 @@ En caso de emplear PMA, deberíamos implementar de forma explicita la barrera si
 \end{answered}
 \end{enumerate}
 
+%=====================================================================================================================
+
 \item Suponga que quiere ordenar N números enteros utilizando pasaje de mensajes con el siguiente algoritmo (odd/even Exchange sort): Hay  n procesos P [1: n], con n par. Cada proceso ejecuta una serie de rondas. En las rondas impares, los procesos con número impar P[impar] intercambian valores con P [impar +1] si los números están desordenados. En las rondas pares, los procesos con numero par P[par] intercambian valores con P [par +1] si los números están desordenados (P [1] y P[n] no hacen nada en las rondas pares).
 \begin{enumerate}
     \item Determine cuantas rondas deben ejecutarse en el peor caso para ordenar los números.
@@ -377,5 +379,211 @@ En caso de emplear PMA, deberíamos implementar de forma explicita la barrera si
         \emph{Misma respuesta que en el caso general para $k$ procesos.}
     \end{answered}
 \end{enumerate}
+
+\item Dado el siguiente programa concurrente con memoria compartida, tenga en cuenta que las instrucciones no son atómicas:
+\\
+\begin{lstlisting}
+x:=4; y:=2; z:=3;
+co x:=x-z // z:=z*2 // y:=z+4  oc
+\end{lstlisting}
+\begin{enumerate}
+\item ¿Cuáles de las asignaciones dentro de la sentencia co cumplen con la propiedad de a lo sumo una vez? Justifique. 
+\begin{answered}
+\begin{itemize}
+    \item \lstinline{x:=x-z} cumple con ASV. Contiene una referencia crítica (\lstinline{z}) pero, \lstinline{x} no es referenciada por ningun otro proceso.
+    \item \lstinline{z:=z*2} cumple con ASV. No contiene referencias críticas.
+    \lstinline{z:=z*2} Contiene una referencia crítica (\lstinline{z}) pero, \lstinline{y} no es referenciada por ningun otro proceso.
+\end{itemize}    
+\end{answered}
+\end{enumerate}
+
+%=====================================================================================================================
+
+\item Sea el problema de alocacion Shortest Job Next
+\begin{answered}
+\emph{Nota$_1$: mismo algoritmo que el del apunte de monitores.}
+\\
+\emph{Nota$_2$: Para el LJN (Lowest Job Next) aplican las mismas respuestas.}
+\end{answered}
+\begin{enumerate}
+\item ¿Funciona correctamente con disciplina de señalización Signal and continue? Justifique.
+\begin{answered}
+Con esta disciplina, todo proceso señalizado es enviado a una cola de listos; donde competirá contra el resto por el acceso al recurso. En cuyo caso, podría perder contra otro proceso y la meta de SJN no se estaría concretando.
+\end{answered}
+\item ¿Funciona correctamente con disciplina de señalización signal and wait? Justifique.
+\begin{answered}
+Con esta disciplina, todo proceso señalizado retoma su ejecución de inmediato. Por tal motivo, esta disciplina es la más adecudada para la implementación.    
+\end{answered}
+\end{enumerate}
+
+%=====================================================================================================================
+
+\item Suponga que el tiempo de ejecución de un algoritmo secuencial es de 1000 unidades de tiempo, de las cuales el 80\% corresponden a código paralelizable. ¿Cuál es el límite en la mejora que puede obtenerse  paralelizando el algoritmo?
+
+\begin{answered}
+    \emph{Apunte IV: Ley de Amdhal (sección 1.5)}
+\end{answered}
+
+%=====================================================================================================================
+
+\item Suponga los siguientes métodos de ordenación de menor a mayor para n valores (n par y potencia de dos), utilizando pasaje de mensajes. Asuma que cada proceso tiene almacenamiento local solo para dos valores (el próximo y el mantenido hasta ese momento).
+\\ 
+(1) Un pipeline de filtros. El primero hace un input de los valores de a uno por vez, mantiene el mínimo y le pasa los otros al siguiente. Cada filtro hace lo mismo: recibe un stream de valores desde el procesador, mantiene el mínimo y pasa los otros al sucesor.
+\\ 
+(2) Una red de procesos filtro como la del dibujo (sort merge network)
+\\ 
+(3) Odd/Even Exchange Sort. Odd/even exchange sort. Hay n procesos P[1:n], Cada uno ejecuta una serie de rondas. En las rondas “impares”, los procesos con número impar P[impar] intercambian valores con P[impar+1]. En las rondas “pares”, los procesos con número par P[par] intercambian valores con P[par+1] (P[1] y P[n] no hacen nada en las rondas “pares”). En cada caso, si los números están desordenados actualizan su valor con el recibido.
+\begin{enumerate}
+\item ¿Cuántos procesos son necesarios en (1) y (2)? Justifique.
+
+\begin{answered}
+\begin{itemize}
+    \item Pipeline $\rightarrow$ En este escenario, cada proceso es responsable de retener un valor mínimo. Por consiguiente, se requieren $n$ procesos para obtener el orden correcto.
+    \item Sort Merged Network $\rightarrow$ En este escenario los procesos se organizan en forma de árbol binario, cuya altura ($h$) está dada por $log_2n$. La cantidad de nodos de un árbol equivale a $2^h - 1$.
+\end{itemize}
+\end{answered}
+
+\item ¿Cuántos mensajes envía cada algoritmo para ordenar los valores? Justifique. NOTA: se pueden obviar en los cálculos los mensajes que se requieren para enviar los EOS.
+\begin{answered}
+\begin{itemize}
+    \item Pipeline $\rightarrow$ Cada proceso envía 1 mensaje menos, del que recibió. De forma general, la cantidad total de mensajes puede verse como la siguiente sumatoria $\sum_{i=1}^n n-i$
+    \item Sort Merged Network $\rightarrow$ Cada nivel del árbol envía $n$ mensajes, sabiendo que la altura del árbol es $log_2 n$ podemos afirmar que se enviarán $n * log_2 n$ mensajes.
+\end{itemize}
+\end{answered}
+\item ¿En cada caso, cuáles mensajes pueden ser enviados en paralelo (asumiendo que existe el hardware apropiado) y cuáles son enviados secuencialmente? Justifique.
+\item ¿Cuál es el tiempo total de ejecución de cada algoritmo? Asuma que cada operación de comparación o de envío de mensaje toma una unidad de tiempo. Justifique.
+\end{enumerate}
+
+\item Sea la siguiente solución al problema de multiplicación de matrices de n*n con P procesadores trabajando en paralelo.
+
+\begin{enumerate}
+\item Suponga n=128 y que cada procesador es capaz de ejecutar un proceso. ¿Cuántas asignaciones, sumas y productos se hacen secuencialmente (caso en el que P=1)?
+\begin{answered}
+\begin{itemize}
+    \item En este caso $strip \rightarrow n$
+    \item Línea 11: Hace tantas pasadas como columnas tenga B ($n$) por el tamaño del strip $\rightarrow n^2$
+    \item Línea 15: Hace $n$ pasadas por tantas pasadas como columnas tenga B por el tamaño del strip $\rightarrow n^3$
+\end{itemize}
+
+$Asignaciones = n^3 + n^2 = 128^3 + 128^2 = 2097152 + 16384 = 2113536$
+
+$Sumas = n^3 = 128^3 = 2097152$
+
+$Productos = n^3 = 128^3 = 2097152$ 
+\end{answered}
+\item Manteniendo n=128. Si los procesadores P1 a P7 son iguales, y sus tiempos de asignación son 1, de suma 2 y de producto 3, y si
+P8 es 4 veces más lento, ¿Cuánto tarda el proceso total concurrente? ¿Cuál es el valor del speedup (Tiempo
+secuencial/Tiempo paralelo)?. Modifique el código para lograr un mejor speedup.
+\begin{answered}
+\begin{itemize}
+    \item En este caso $strip = n/p = 128/8 = 16$
+\end{itemize}
+
+$Asignaciones = n^2 \times 16 + n \times 16 = 128^2 \times 16 + 128 \times 16 = 262144 + 2048 = 264192$
+
+$Sumas = n^2 \times 16 = 128^2 \times 16 = 262144$
+
+$Productos = n^2 \times 16 = 128^2 \times 16 = 262144$
+
+Los procesos 1 a 7, tardaran lo mismo:
+
+$264192 \times 1 ut + 262144 \times 2 ut + 262144 \times 3 ut = 1574912 ut$
+
+El proceso 8, es 4 veces más lento que el resto. Por lo cual, tardará 4 veces más:
+
+$1574912 ut \times 4 = 6299648 ut$
+
+Por consiguiente, el proceso concurrente tardará $6299648 ut$ en finalizar. Ya que, el proceso 8 será el último, en terminar su trabajo.
+
+Con las unidades de tiempo, de los procesadores más eficientes, el proceso secuencial tardará:
+
+$2113536 \times 1 ut + 2097152 \times 2 ut + 2097152 \times 3 = 12599296 ut$
+
+Por consiguiente el Speedup obtenido será de 2.
+
+Para mejorar el Speedup podríamos balancear la carga de trabajo, de los procesadores, de manera distinta. Por ejemplo; haciendo que el procesador 8, el más lento, trabaje sobre un strip más pequeño.
+
+\begin{itemize}
+    \item Múltiplo de 7 más cercano a 128 $\rightarrow 126$
+    \item Tamaño del stripe, para el procesador 8 $\rightarrow 128 - 126 = 2$
+    \item Tamaño del stripe, para el resto de los procesadores $\rightarrow 126/7 = 18$
+\end{itemize}
+
+Asignaciones P$_{8} = 128^2 \times 2 + 128 \times 2 = 33024$
+
+Sumas P$_{8} = 128^2 \times 2 = 32768$
+
+Productos P$_{8} = 128^2 \times 2 = 32768$
+
+Tiempo P$_8$ $= 33024 \times 1 ut + 32768 \times 2 ut + 32768 \times 3 = 196864 ut$
+
+Asignaciones P$_{resto} = 128^2 \times 18 + 128 \times 18 = 297216$
+
+Sumas P$_{resto} = 128^2 \times 18 = 294912$
+
+Productos P$_{resto} = 128^2 \times 2 = 294912$
+
+Tiempo P$_{resto}= 297216 \times 1 ut + 294912 \times 2 ut + 294912 \times 3 = 1771776 ut$
+
+Con estos nuevos tiempos el speedup será de 7,1.
+\end{answered}
+\end{enumerate}
+
+\item Dado el siguiente programa, indice si es posible que finalice.
+
+\begin{lstlisting}
+bool continue = true;
+bool try = false;
+co  while (continue) { try = true; try = false; } #(P)
+/   <await(try) continue = false> #(Q)
+oc
+\end{lstlisting}
+
+\begin{answered}
+Con una política débilmente fair, el programa podría no terminar. Ya que, \emph{try} no se mantiene verdadera hasta ser vista por (Q).
+
+Con una política fuertemente fair, el programa podría terminar. Ya que, \emph{try} se convierte en verdadera con infinita frecuencia.
+\end{answered}
+
+%===============================================================================================================================================
+\item Suponga los siguientes programas concurrentes. Asuma que EOS es un valor especial que indica el fin de la secuencia de mensajes y que los procesos son iniciados desde el programa principal.
+
+\begin{enumerate}
+\item ¿Qué hacen los programas?
+\item Analice desde el punto de vista del número de mensajes.
+\item Analice desde el punto de vista de la granularidad de procesos.
+\item ¿Cuál de los programas le parece el más adecuado para ejecutar sobre una arquitectura tipo cluster PCs? Justifique. 
+\end{enumerate}
+
+%=======================================================================================================
+
+\item Dados los siguientes dos segmentos de código, indicar para cada ítem si son equivalentes o no. Justificar en cada caso (dar ejemplos si es necesario).
+
+%======================================================================================
+\item ¿Qué significa el problema de interferencia en un programa concurrente? ¿Cómo puede evitarse? 
+
+%======================================================================================
+
+\item Suponga que n2 procesos organizados en forma de grilla cuadrada. Cada proceso puede comunicarse solo con los vecinos izquierdo, derecho, de arriba y de abajo (los procesos de las esquinas tienen solo 2 vecinos, y los otros en los bordes de la grilla tienen 3 vecinos). Cada proceso tiene inicialmente un valor local v.
+\begin{enumerate}
+    \item Escriba un algoritmo heartbeat que calcule el máximo y el mínimo de los n2 valores. Al terminar el programa, cada proceso debe conocer ambos valores.
+    \item Analice la solución desde el punto de vista del número de mensajes.
+    \item ¿Puede realizar alguna mejora para reducir el número de mensajes?
+\end{enumerate}
+
+%=============================================================================================
+
+\item En los protocolos de acceso a sección crítica vistos en clase, cada proceso ejecuta el mismo algoritmo. Una manera alternativa de resolver el problema es usando un proceso coordinador. En este caso, cuando cada
+proceso SC[i] quiere entrar a su sección crítica le avisa al coordinador, y espera a que éste le de permiso. Al
+terminar de ejecutar su sección crítica, el proceso SC[i] le avisa al coordinador.
+Desarrolle protocolos para los procesos SC[i] y el coordinador usando sólo variables compartidas (no
+tenga en cuenta la propiedad de eventual entrada).
+
+%====================================================================
+
+\item Suponga que la solución a un problema es paralelizada sobre p procesadores de dos maneras diferentes.
+En un caso, el speedup (S) está regido por la función S=p-1 y en el otro por la función S=p/2. ¿Cuál de las
+dos soluciones se comportará más eficientemente al crecer la cantidad de procesadores? Justifique
+claramente.
 \end{QandA}
 \end{document}
