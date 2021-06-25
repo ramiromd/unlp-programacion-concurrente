@@ -451,7 +451,28 @@ Con esta disciplina, todo proceso señalizado retoma su ejecución de inmediato.
 \end{itemize}
 \end{answered}
 \item ¿En cada caso, cuáles mensajes pueden ser enviados en paralelo (asumiendo que existe el hardware apropiado) y cuáles son enviados secuencialmente? Justifique.
+\begin{answered}
+\begin{itemize}
+    \item Pipeline $\rightarrow$ en este caso se podrán enviar tantos mensajes en paralelo, como procesos activos existan en un instante de tiempo dado.
+    \item Sort Merged Network $\rightarrow$ en este caso la cantidad de mensajes está dada en función de la altura del árbol. Se podrían enviar tantos mensajes, en paralelo, como procesos de una altura determinada se estén ejecutando.
+    \item Odd/Even Exchange Sort $\rightarrow$ en este caso la cantidad de mensajes, también, está dada en función de la cantidad de procesos activos. En cada ronda, se podrán enviar en paralelo tantos mensajes como pares de procesos activos.
+\end{itemize}
+\end{answered}
 \item ¿Cuál es el tiempo total de ejecución de cada algoritmo? Asuma que cada operación de comparación o de envío de mensaje toma una unidad de tiempo. Justifique.
+\begin{answered}
+\begin{itemize}
+\item Pipeline $\rightarrow$ la lógica en este algoritmo es la de comparar, realizar una asignación si corresponde, y enviar un mensaje. Por lo tanto, cada proceso hara tantas comparaciones como envío de mensajes:
+\\
+\begin{center}
+    unidades de tiempo $\rightarrow 2 * \sum_{i=1}^n n-i $
+\end{center}
+\item Sort Merged Network $\rightarrow$ La lógica en este algoritmo, es similiar al pipeline (comparar, asignar y enviar). Por tal motivo, cada proceso hara tantas comparaciones como envío de mensajes:
+\\
+\begin{center}
+    unidades de tiempo $\rightarrow 2 * (n * log_2 n)$
+\end{center}
+\end{itemize}  
+\end{answered}
 \end{enumerate}
 
 \item Sea la siguiente solución al problema de multiplicación de matrices de n*n con P procesadores trabajando en paralelo.
@@ -559,10 +580,10 @@ Con una política fuertemente fair, el programa podría terminar. Ya que, \emph{
 
 \item Dados los siguientes dos segmentos de código, indicar para cada ítem si son equivalentes o no. Justificar en cada caso (dar ejemplos si es necesario).
 
-%======================================================================================
+%=======================================================================================================
 \item ¿Qué significa el problema de interferencia en un programa concurrente? ¿Cómo puede evitarse? 
 
-%======================================================================================
+%=======================================================================================================
 
 \item Suponga que n2 procesos organizados en forma de grilla cuadrada. Cada proceso puede comunicarse solo con los vecinos izquierdo, derecho, de arriba y de abajo (los procesos de las esquinas tienen solo 2 vecinos, y los otros en los bordes de la grilla tienen 3 vecinos). Cada proceso tiene inicialmente un valor local v.
 \begin{enumerate}
