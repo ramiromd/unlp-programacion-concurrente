@@ -569,27 +569,168 @@ Con una política fuertemente fair, el programa podría terminar. Ya que, \emph{
 %===============================================================================================================================================
 \item Suponga los siguientes programas concurrentes. Asuma que EOS es un valor especial que indica el fin de la secuencia de mensajes y que los procesos son iniciados desde el programa principal.
 
+\includegraphics[]{assets/ejercicio-22.png}
+
 \begin{enumerate}
 \item ¿Qué hacen los programas?
+
+\begin{answered}
+Ambos programas realizan la suma de los elementos de una matriz. Aunque, difieren en el modo en que lo hacen.
+
+En el \lstinline{Programa 1}: el proceso \lstinline{Genera} envía todos los valores al proceso \lstinline{Acumula}. El proceso \lstinline{Acumula} suma los valores que recibe desde \lstinline{Genera}.
+
+En el \lstinline{Programa 2}: el proceso \lstinline{Genera} realiza la suma de los elementos de una fila y envia el resultado a \lstinline{Acumula}. El proceso \lstinline{Acumula}, recibe los resultados parciales y los adiciona en su acumulador.
+\end{answered}
+
+
 \item Analice desde el punto de vista del número de mensajes.
+
+\begin{answered}
+En el \lstinline{Programa 1}, el proceso \lstinline{Genera} envía todos los elementos de la matriz. Por lo cual, en esta solución, se están enviando $n*n = n^2$ mensajes.
+
+En el \lstinline{Programa 2}, el proceso \lstinline{Genera} envía los valores acumulados de cada fila. Por lo cual, en esta solución, se están enviando $n$ mensajes.
+
+\end{answered}
+
 \item Analice desde el punto de vista de la granularidad de procesos.
+
+\begin{answered}
+El programa \lstinline{P2} tiene mayor granularidad, con respecto a \lstinline{P1}. Esto se debe a que, requiere menor comunicación (menos mensajes) para completar la tarea.
+\end{answered}
+
 \item ¿Cuál de los programas le parece el más adecuado para ejecutar sobre una arquitectura tipo cluster PCs? Justifique. 
+
+\begin{answered}
+Las arquitecturas cluster PC pueden ser catalogadas como grano grueso. Esto es, porque se componen de mucho procesadores; otorgando mayor potencia para cómputo. No obstante, tienen una menor performance en cuanto a comunicación.
+
+Es deseable que la granularidad de la aplicación, se ajuste a la de la arquitectura. Para hacer un uso apropiado de los recursos y evitar rendimientos menores.
+
+En este escenario, el programa, \lstinline{P1} parece el más adecuado para ejecutar en la arquitectura planteada.
+\end{answered}
 \end{enumerate}
 
 %=======================================================================================================
 
-\item Dados los siguientes dos segmentos de código, indicar para cada ítem si son equivalentes o no. Justificar en cada caso (dar ejemplos si es necesario).
+\item Dado el siguiente bloque de código, indique para cada inciso qué valor queda en aux, o si el código queda bloqueado. Justifique su respuesta.
+
+\begin{lstlisting}
+aux = -1;
+...
+if (A == 0); P2?(aux) -> aux = aux + 2;
+[] (A == 1); P2?(aux) -> aux = aux + 5;
+[] (B == 0); P3?(aux) -> aux = aux + 7;
+fi
+\end{lstlisting}
+\begin{enumerate}
+\item Si el valor de A = 1 y B = 2 antes del if, y solo P2 envia el valor 6.
+\item Si el valor de A = 0 y B = 2 antes del if, y solo P2 envia el valor 8.
+\item Si el valor de A = 2 y B = 0 antes del if, y solo P3 envia el valor 6.
+\item Si el valor de A = 2 y B = 1 antes del if, y solo P3 envia el valor 9.
+\item Si el valor de A = 1 y B = 0 antes del if, y solo P3 envia el valor 14.
+\item Si el valor de A = 0 y B = 0 antes del if, P3 envia el valor 9 y P2 el valor 5.
+\end{enumerate}
 
 %=======================================================================================================
 \item ¿Qué significa el problema de interferencia en un programa concurrente? ¿Cómo puede evitarse? 
+\begin{answered}
+\emph{Apunte I: sección 1.4}
+\end{answered}
+
 
 %=======================================================================================================
 
 \item Suponga que n2 procesos organizados en forma de grilla cuadrada. Cada proceso puede comunicarse solo con los vecinos izquierdo, derecho, de arriba y de abajo (los procesos de las esquinas tienen solo 2 vecinos, y los otros en los bordes de la grilla tienen 3 vecinos). Cada proceso tiene inicialmente un valor local v.
 \begin{enumerate}
-    \item Escriba un algoritmo heartbeat que calcule el máximo y el mínimo de los n2 valores. Al terminar el programa, cada proceso debe conocer ambos valores.
-    \item Analice la solución desde el punto de vista del número de mensajes.
-    \item ¿Puede realizar alguna mejora para reducir el número de mensajes?
+\item Escriba un algoritmo heartbeat que calcule el máximo y el mínimo de los n2 valores. Al terminar el programa, cada proceso debe conocer ambos valores.
+\begin{answered}
+La idea del algoritmo es que, cada proceso pueda propagar su valor hasta el proceso más lejano. La mayor distancia entre procesos, sin diagonales, está dada por $2(n-1)$ (esquina superior izquierda $\leftarrow \rightarrow$ esquina inferior derecha).
+\end{answered}
+
+\begin{lstlisting}
+chan valores[1:n,1:n](int);
+
+Process P[i=1..n;j=1..n]
+
+int v;
+int nuevo;
+int min = v;
+int max = v;
+int rondas = 2(n-1);
+
+for(k=1; k <= rondas; k++)
+
+    foreach(vecinos => (x,y))
+        send valores[x,y](v);
+
+    foreach(vecinos => (x,y))
+        receive valores[i,j](nuevo);
+        if (nuevo < min) min = nuevo;
+        if (nuevo > max) max = nuevo;
+end;
+end;
+\end{lstlisting}
+
+
+\item Analice la solución desde el punto de vista del número de mensajes.
+\begin{answered}
+
+{\renewcommand{\arraystretch}{2}%\
+\begin{center}
+\begin{tabular}{c c c c}
+\textbf{Tipo} &  \textbf{Cantidad} & \textbf{Vecinos} & \textbf{Mensajes} \\
+\hline
+\textbf{Esquina} & 4 & 2 & $cantidad * vecinos * rondas$ \\
+\hline
+\textbf{Borde} & $4(n-2)$ & 3 & $cantidad * vecinos * rondas$ \\
+\hline
+\textbf{Internos} & $(n-2)^2$ & 4 & $cantidad * vecinos * rondas$\\
+\end{tabular}
+\end{center}}
+\end{answered}
+
+\item ¿Puede realizar alguna mejora para reducir el número de mensajes?
+\begin{answered}
+Podemos hacer que cada proceso, también, se comunique con sus diagonales. De esta forma; los procesos esquina tendrán 3 vecinos, los bordes 5 vecinos y el resto 8 vecinos.
+
+Esto incrementará el número de mensajes enviados por cada proceso pero, también reducirá en la mitad la cantidad de rondas ($n-1$). Generando una reducción en la cantidad final de mensajes.
+
+\begin{multicols}{2}
+{\renewcommand{\arraystretch}{2}%\
+\begin{center}
+\begin{tabular}{c c c}
+\textbf{Tipo} &  \textbf{Cantidad} & \textbf{Vecinos} \\
+\hline
+\textbf{Esquina} & 4 & 3 \\
+\hline
+\textbf{Borde} & $4(n-2)$ & 5 \\
+\hline
+\textbf{Internos} & $(n-2)^2$ & 8 \\
+\end{tabular}
+\end{center}}  
+\columnbreak
+{\renewcommand{\arraystretch}{2}%\
+\begin{center}
+\begin{tabular}{c c c}
+\textbf{n} &  \textbf{Sin Diagonales} & \textbf{Con Diagonales} \\
+\hline
+4 & 288 & 252\\
+\hline
+6 & 1200 &  1100\\
+\hline
+8 & 3136 &  2940\\
+\end{tabular}
+\end{center}}  
+\end{multicols}
+
+\end{answered}
+
+\item Indique que mecanismo de pasaje de mensajes utilizaría. Justifique.
+
+\begin{answered}
+En mi opinión, utilizaría PMA. Particularmente, porque su primitiva \lstinline{send} no es bloqueante. Esto nos evita demoras innecesarias al momento de propagar el valor de un proceso, en particular con $n$ muy grandes.    
+\end{answered}
+
+
 \end{enumerate}
 
 %=============================================================================================
@@ -600,11 +741,42 @@ terminar de ejecutar su sección crítica, el proceso SC[i] le avisa al coordina
 Desarrolle protocolos para los procesos SC[i] y el coordinador usando sólo variables compartidas (no
 tenga en cuenta la propiedad de eventual entrada).
 
+\begin{lstlisting}[multicols=2]
+int request[n] = ([n] 0),
+    grant[n] = ([n] 0);
+
+Process Worker[i = 1..n]
+    
+# Seccion no critica ...
+
+request[i] = 1;
+while(grant[i] == 0) skip;
+# Seccion Critica
+grant[i] = 0;
+# Seccion no critica ...
+end;
+
+Process Coordinator
+while (true)
+    for (j = 1; j < n; j++)
+        if (request[j] == 1)
+            request[j] = 0;
+            grant[j] = 1;
+            while (grant[j] == 1) skip;
+        end;
+    end;
+end;
+end;
+\end{lstlisting}
+
 %====================================================================
 
 \item Suponga que la solución a un problema es paralelizada sobre p procesadores de dos maneras diferentes.
 En un caso, el speedup (S) está regido por la función S=p-1 y en el otro por la función S=p/2. ¿Cuál de las
 dos soluciones se comportará más eficientemente al crecer la cantidad de procesadores? Justifique
 claramente.
+\begin{answered}
+    \emph{Apunte IV: sección 1.4 (Escalabilidad)}
+\end{answered}
 \end{QandA}
 \end{document}
