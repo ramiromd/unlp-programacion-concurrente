@@ -616,18 +616,40 @@ En este escenario, el programa, \lstinline{P1} parece el más adecuado para ejec
 \begin{lstlisting}
 aux = -1;
 ...
-if (A == 0); P2?(aux) -> aux = aux + 2;
-[] (A == 1); P2?(aux) -> aux = aux + 5;
-[] (B == 0); P3?(aux) -> aux = aux + 7;
+if (A == 0); P2?(aux) -> aux = aux + 2; # (1)
+[] (A == 1); P3?(aux) -> aux = aux + 5; # (2)
+[] (B == 0); P3?(aux) -> aux = aux + 7; # (3)
 fi
 \end{lstlisting}
 \begin{enumerate}
 \item Si el valor de A = 1 y B = 2 antes del if, y solo P2 envia el valor 6.
+\begin{answered}
+La guarda 1 queda bloqueada; su condición booleana es verdadera pero, su sentencia de comunicación generá bloqueo.
+\end{answered}
 \item Si el valor de A = 0 y B = 2 antes del if, y solo P2 envia el valor 8.
+\begin{answered}
+Solo la guarda 1 tiene éxito. Su sentencia guardada es ejecutada. El programa finaliza con \lstinline{aux = 10}.
+\end{answered}
 \item Si el valor de A = 2 y B = 0 antes del if, y solo P3 envia el valor 6.
+\begin{answered}
+Solo la guarda 3 tiene éxito. Su sentencia guardada es ejecutada. El programa finaliza con \lstinline{aux = 13}.
+\end{answered}
 \item Si el valor de A = 2 y B = 1 antes del if, y solo P3 envia el valor 9.
+\begin{answered}
+Todas las guardas fallan porque sus condiciones booleanas se evalúan como falsas. El programa finaliza con \lstinline{aux = -1}.
+\end{answered}
 \item Si el valor de A = 1 y B = 0 antes del if, y solo P3 envia el valor 14.
+\begin{answered}
+Las guardas 2 y 3, tienen éxito. Se elegirá una de las dos, de forma no deterministica y se ejecutará su sentencia guardada.
+
+El programa finalizará con \lstinline{aux = 19 o 21}.
+\end{answered}
 \item Si el valor de A = 0 y B = 0 antes del if, P3 envia el valor 9 y P2 el valor 5.
+\begin{answered}
+Las guardas 1 y 3, tienen éxito. Se elegirá una de las dos, de forma no deterministica y se ejecutará su sentencia guardada.
+    
+El programa finalizará con \lstinline{aux = 16 o 7}.
+\end{answered}
 \end{enumerate}
 
 %=======================================================================================================
