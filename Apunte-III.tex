@@ -7,9 +7,9 @@
 
 % Carátula
 \title{
-    III\\
-    Programación Concurrente\\
-    \large Clases 7 a 9: Memoria distribuida
+	III\\
+	Programación Concurrente\\
+	\large Clases 7 a 9: Memoria distribuida
 }
 \author{Ramiro Martínez D'Elía}
 \date{2021}
@@ -40,28 +40,27 @@ La estructura FIFO y la atomicidad de las primitivas send y receive aseguran que
 
 
 \begin{lstlisting}[multicols=2]
-channel ch1(string),
-        ch2(string);
+channel ch1(string), ch2(string);
 
 Program Uno
-    string respuesta;
-    send ch2("Hola");
-    receive ch1(respuesta);
+	string respuesta;
+	send ch2("Hola");
+	receive ch1(respuesta);
 End.
 
 Program Dos
-    string saludo;
-    receive ch2(saludo);
-    send ch1("Aca esta tu respuesta ...);
+	string saludo;
+	receive ch2(saludo);
+	send ch1("Aca esta tu respuesta ...);
 End.
 \end{lstlisting}
 
 Según la forma en que se utilicen, los canales, pueden clasificarse en los siguientes tipos:
 
 \begin{itemize}
-    \item \textbf{Mailbox}: Cualquier proceso puede enviar y recibir datos, por alguno de los canales declarados. Relación \emph{n:n}.
-    \item \textbf{Input Port}: El canal tiene un único receptor y \emph(n) emisores. Relación \emph{1:n}.
-    \item \textbf{Link}: El canal tiene un único receptor y un único emisor. Relación \emph{1:1}.
+	\item \textbf{Mailbox}: Cualquier proceso puede enviar y recibir datos, por alguno de los canales declarados. Relación \emph{n:n}.
+	\item \textbf{Input Port}: El canal tiene un único receptor y \emph(n) emisores. Relación \emph{1:n}.
+	\item \textbf{Link}: El canal tiene un único receptor y un único emisor. Relación \emph{1:1}.
 \end{itemize}
 
 \chapter{Patrones de resolución}
@@ -86,24 +85,24 @@ En esta solución, utilizaremos un proceso central que; recibirá los valores de
 \begin{multicols}{2}
 \begin{lstlisting}
 channel values(int),
-        results[n](int, int);
-    
+		results[n](int, int);
+	
 Process Peer[i = 1 to n-1]
-    int v, min, max;
-    send values(v);
-    receive results[i](min, max);
+	int v, min, max;
+	send values(v);
+	receive results[i](min, max);
 End.
 
 Process CentralPeer[0]
-    int v, min, max, temp;
+	int v, min, max, temp;
 
-    for(i=1 to n-1)
-        receive values(temp);
-        # Compara y actualiza ...
-    end;
+	for(i=1 to n-1)
+		receive values(temp);
+		# Compara y actualiza ...
+	end;
 
-    for(i=1 to n-1)
-        send results[i](min, max);
+	for(i=1 to n-1)
+		send results[i](min, max);
 End.
 \end{lstlisting}
 
@@ -112,17 +111,17 @@ End.
 \centering
 \vspace*{\fill}
 \begin{tikzpicture}
-    \node[circle,draw, minimum size=1cm] (0) at (0,0) {$P_0$};
-    \node[circle,draw, minimum size=1cm] (1) at (0,2) {$P_1$};
-    \node[circle,draw, minimum size=1cm] (2) at (2,0) {$P_2$};
-    \node[circle,draw, minimum size=1cm] (3) at (1.5, -1.5) {$P_3$};
-    \node[circle,draw, minimum size=1cm] (4) at (-1.5,-1.5) {$P_4$};
-    \node[circle,draw, minimum size=1cm] (5) at (-2, 0) {$P_5$};
-    \draw (0) -- (1);
-    \draw (0) -- (2);
-    \draw (0) -- (3);
-    \draw (0) -- (4);
-    \draw (0) -- (5);
+	\node[circle,draw, minimum size=1cm] (0) at (0,0) {$P_0$};
+	\node[circle,draw, minimum size=1cm] (1) at (0,2) {$P_1$};
+	\node[circle,draw, minimum size=1cm] (2) at (2,0) {$P_2$};
+	\node[circle,draw, minimum size=1cm] (3) at (1.5, -1.5) {$P_3$};
+	\node[circle,draw, minimum size=1cm] (4) at (-1.5,-1.5) {$P_4$};
+	\node[circle,draw, minimum size=1cm] (5) at (-2, 0) {$P_5$};
+	\draw (0) -- (1);
+	\draw (0) -- (2);
+	\draw (0) -- (3);
+	\draw (0) -- (4);
+	\draw (0) -- (5);
 \end{tikzpicture}
 \vspace*{\fill}
 \end{multicols}
@@ -138,32 +137,32 @@ Cada proceso, envía los datos al resto, y así cada uno puede conocer todos los
 channel values[n](int, int);
 
 Process Peer[i = 0 to n]
-    int v, min, max, temp;
+	int v, min, max, temp;
 
-    for(j=0 to n st j != i)
-        send values[j](v);
+	for(j=0 to n st j != i)
+		send values[j](v);
 
-    for(j=0 to n st j != i)
-        receive receive[i](temp)
-        # Compara y actualiza.
+	for(j=0 to n st j != i)
+		receive receive[i](temp)
+		# Compara y actualiza.
 End.
 \end{lstlisting}
 
 \columnbreak
-    
+	
 \centering
 \vspace*{\fill}
 \begin{tikzpicture}
-    \node[circle,draw, minimum size=1cm] (0) at (0,2) {$P_0$};
-    \node[circle,draw, minimum size=1cm] (1) at (2,1) {$P_1$};
-    \node[circle,draw, minimum size=1cm] (2) at (2,-1) {$P_2$};
-    \node[circle,draw, minimum size=1cm] (3) at (0, -2) {$P_3$};
-    \node[circle,draw, minimum size=1cm] (4) at (-2,-1) {$P_4$};
-    \node[circle,draw, minimum size=1cm] (5) at (-2, 1) {$P_5$};
-    \draw (0) -- (1); \draw (0) -- (2); \draw (0) -- (3); \draw (0) -- (4);
-    \draw (0) -- (5); \draw (1) -- (2); \draw (1) -- (3); \draw (1) -- (4); 
-    \draw (1) -- (5); \draw (2) -- (3); \draw (2) -- (4); \draw (2) -- (5);
-    \draw (3) -- (4); \draw (3) -- (5); \draw (4) -- (5);
+	\node[circle,draw, minimum size=1cm] (0) at (0,2) {$P_0$};
+	\node[circle,draw, minimum size=1cm] (1) at (2,1) {$P_1$};
+	\node[circle,draw, minimum size=1cm] (2) at (2,-1) {$P_2$};
+	\node[circle,draw, minimum size=1cm] (3) at (0, -2) {$P_3$};
+	\node[circle,draw, minimum size=1cm] (4) at (-2,-1) {$P_4$};
+	\node[circle,draw, minimum size=1cm] (5) at (-2, 1) {$P_5$};
+	\draw (0) -- (1); \draw (0) -- (2); \draw (0) -- (3); \draw (0) -- (4);
+	\draw (0) -- (5); \draw (1) -- (2); \draw (1) -- (3); \draw (1) -- (4); 
+	\draw (1) -- (5); \draw (2) -- (3); \draw (2) -- (4); \draw (2) -- (5);
+	\draw (3) -- (4); \draw (3) -- (5); \draw (4) -- (5);
 \end{tikzpicture}
 \vspace*{\fill}
 \end{multicols}
@@ -177,45 +176,45 @@ En esta solución, cada proceso recibe mensajes de su antecesor y envía mensaje
 channel values[n](int, int);
 
 Process Initial[0]
-    int v, min = v, max = v;
+	int v, min = v, max = v;
 
-    # Inicia primera iteracion ...
-    send values[1](min, max);
-    receive values[0](min, max);
+	# Inicia primera iteracion ...
+	send values[1](min, max);
+	receive values[0](min, max);
 
-    # Inicia segunda iteracion ...
-    send values[1](min, max);
+	# Inicia segunda iteracion ...
+	send values[1](min, max);
 End.
-        
+		
 Process Peer[i = 1 to n-1]
-    int v, min, max;
+	int v, min, max;
 
-    # Primera iteracion ...
-    receive values[i](min, max);
-    # Compara y actualiza valores ...
-    send values[(i+1) mod n](min, max);
+	# Primera iteracion ...
+	receive values[i](min, max);
+	# Compara y actualiza valores ...
+	send values[(i+1) mod n](min, max);
 
-    # Segunda iteracion
-    receive values[i](min, max);
-    send values[(i+1) mod n](min, max);
+	# Segunda iteracion
+	receive values[i](min, max);
+	send values[(i+1) mod n](min, max);
 End.
-    
+	
 
 \end{lstlisting}
-    
+	
 \columnbreak
-    
+	
 \centering
 \vspace*{\fill}
 \begin{tikzpicture}
-    \node[circle,draw, minimum size=1cm] (0) at (0,2) {$P_0$};
-    \node[circle,draw, minimum size=1cm] (1) at (2,1) {$P_1$};
-    \node[circle,draw, minimum size=1cm] (2) at (2,-1) {$P_2$};
-    \node[circle,draw, minimum size=1cm] (3) at (0, -2) {$P_3$};
-    \node[circle,draw, minimum size=1cm] (4) at (-2,-1) {$P_4$};
-    \node[circle,draw, minimum size=1cm] (5) at (-2, 1) {$P_5$};
-    \draw (0) -- (1); \draw (1) -- (2); \draw (2) -- (3); 
-    \draw (3) -- (4); \draw (4) -- (5); \draw (5) -- (0);
+	\node[circle,draw, minimum size=1cm] (0) at (0,2) {$P_0$};
+	\node[circle,draw, minimum size=1cm] (1) at (2,1) {$P_1$};
+	\node[circle,draw, minimum size=1cm] (2) at (2,-1) {$P_2$};
+	\node[circle,draw, minimum size=1cm] (3) at (0, -2) {$P_3$};
+	\node[circle,draw, minimum size=1cm] (4) at (-2,-1) {$P_4$};
+	\node[circle,draw, minimum size=1cm] (5) at (-2, 1) {$P_5$};
+	\draw (0) -- (1); \draw (1) -- (2); \draw (2) -- (3); 
+	\draw (3) -- (4); \draw (4) -- (5); \draw (5) -- (0);
 \end{tikzpicture}
 \vspace*{\fill}
 \end{multicols}
@@ -259,10 +258,9 @@ Process Copy
 Char c;
 
 while (true)
-    west?(c)
-    east!(c);
+	west?(c)
+	east!(c);
 end.
-
 End.
 \end{lstlisting}
 
@@ -276,36 +274,35 @@ Process Copy
 Char c1, c2;
 
 while (true)
-    west?(c1); west?(c2);
-    east!(c1); east!(c1);
+	west?(c1); west?(c2);
+	east!(c1); east!(c1);
 end.
-
 End.
 \end{lstlisting}
 
 \textbf{\emph{La comunicación guardada}}, ofrece un tipo de \textbf{\emph{comunicación no determinística}} que resuelve la limitación planteada. \textbf{\emph{Combinando sentencias condicionales y de comunicación}} de la siguiente forma $B; C \rightarrow S $, donde:
 
 \begin{itemize}
-    \item \textbf{\emph{B}} es una sentencia condicional, que de no existir se asume \emph{verdadera}.
-    \item \textbf{\emph{C}} es una sentencia de comunicación.
-    \item \textbf{\emph{D}} es un conjunto de sentencias a ejecutar.
-    \item Juntas \textbf{\emph{B}} y \textbf{\emph{C}} forman una \textbf{\emph{guarda}} que "protegen" la ejecución de \textbf{\emph{S}}
+	\item \textbf{\emph{B}} es una sentencia condicional, que de no existir se asume \emph{verdadera}.
+	\item \textbf{\emph{C}} es una sentencia de comunicación.
+	\item \textbf{\emph{D}} es un conjunto de sentencias a ejecutar.
+	\item Juntas \textbf{\emph{B}} y \textbf{\emph{C}} forman una \textbf{\emph{guarda}} que "protegen" la ejecución de \textbf{\emph{S}}
 \end{itemize}
 
 Con respecto al funcionamiento de las \textbf{\emph{guardas}}, se debe tener en cuenta lo siguiente:
 
 \begin{itemize}
-    \item La guarda tiene \textbf{\emph{éxito}} si, \textbf{\emph{B}} es verdadera y \textbf{\emph{C}} no causa demora (tiene mensajes $\rightarrow$ ejecución inmediata).
-    \item La guarda \textbf{\emph{falla}} si, \textbf{\emph{B}} es falsa.
-    \item La guarda se \textbf{\emph{bloquea}} si, \textbf{\emph{B}} es verdadera y \textbf{\emph{C}} causa demora.
+	\item La guarda tiene \textbf{\emph{éxito}} si, \textbf{\emph{B}} es verdadera y \textbf{\emph{C}} no causa demora (tiene mensajes $\rightarrow$ ejecución inmediata).
+	\item La guarda \textbf{\emph{falla}} si, \textbf{\emph{B}} es falsa.
+	\item La guarda se \textbf{\emph{bloquea}} si, \textbf{\emph{B}} es verdadera y \textbf{\emph{C}} causa demora.
 \end{itemize}
 
 Podemos aplicar comunicación guardada sobre 2 (dos) tipos de estructuras del control: el \textbf{\emph{if}} y el \textbf{\emph{do}}. Cada una, con la siguiente semántica de ejecución:
 
 \begin{itemize}
-    \item Si \textbf{\emph{todas las guardas fallan}} (en simultáneo); la estructura de control finaliza sin efectos.
-    \item Si al menos una guarda tiene éxito; se elige una de manera no deterministica, se ejecuta su \textbf{\emph{B}} y luego su \textbf{\emph{C}}. En el caso del \textbf{\emph{if}}, la estructura finaliza.
-    \item Si todas las \textbf{\emph{guardas están bloqueadas}}; se espera hasta que alguna tenga éxito.
+	\item Si \textbf{\emph{todas las guardas fallan}} (en simultáneo); la estructura de control finaliza sin efectos.
+	\item Si al menos una guarda tiene éxito; se elige una de manera no deterministica, se ejecuta su \textbf{\emph{B}} y luego su \textbf{\emph{C}}. En el caso del \textbf{\emph{if}}, la estructura finaliza.
+	\item Si todas las \textbf{\emph{guardas están bloqueadas}}; se espera hasta que alguna tenga éxito.
 \end{itemize}
 
 La versión del proceso Copy, para 2 caracteres, se puede mejorar utilizando comunicación guardada del siguiente modo:
@@ -335,8 +332,8 @@ La técnica de pasaje de mensajes, resulta óptima para resolver problemas del t
 No obstante, el uso de esta técnica para problemas del tipo cliente/servidor; no resulta del todo óptima. Ese tipo de problemas supone una comunicación bidireccional. Es decir, un cliente realiza una petición y, posteriormente, un servidor le otorga una respuesta. Esto nos obliga a definir un gran número de canales:
 
 \begin{itemize}
-    \item Al menos 1 (un) canal por el cual, el servidor reciba peticiones.
-    \item Un canal de respuesta para cada cliente.
+	\item Al menos 1 (un) canal por el cual, el servidor reciba peticiones.
+	\item Un canal de respuesta para cada cliente.
 \end{itemize}
 
 Los mecanismos de \textbf{\emph{RPC}} y \textbf{\emph{Rendezvous}}, resuelven de forma más adecuada los problemas del tipo cliente/servidor. Combinando PMS con aspectos de monitores.
@@ -352,71 +349,75 @@ Las \textbf{\emph{operaciones}}, resultan \textbf{\emph{canales de comunicación
 
 Los programas se descomponen en módulos (con procesos y procedimientos). Los procesos, de un módulo, son llamados \textbf{\emph{background}} para diferenciarlos de los procesos exportados (\textbf{\emph{servers}}). El siguiente ejemplo, muestra de forma trivial la especificación de un módulo.
 
+\noindent
+\begin{minipage}{\textwidth}
 \begin{lstlisting}
 Module module_name
-    op opname(params)[returns type];        # (1) Interfaz publica
+
+op opname(params)[returns type];        # (1) Interfaz public
+
 Body
-    int x;                                  # (2) Definicion de variables locales
-    x = 0;                                  # e inicializacion    
 
-    proc opname(params)[returns type]       # (3) Definicion de procedimientos exportados
-    begin
-        # Cuerpo del procedimiento.
-    end;
+int x;                                  # (2) Definicion de variables locales
+x = 0;                                  # e inicializacion    
 
-    proc local_proc(params)[returns type]   # (4) Definicion de procedimientos locales
-    begin
-        # Cuerpo del procedimiento.
-    end;
+proc opname(params)[returns type]       # (3) Definicion de procedimientos exportados
+begin
+	# Cuerpo del procedimiento.
+end;
 
-    Process Main                            # (5) Definicion de procesos locales
-        # Cuerpo del proceso bakground
-    end;
+proc local_proc(params)[returns type]   # (4) Definicion de procedimientos locales
+begin
+	# Cuerpo del procedimiento.
+end;
+
+Process Main                            # (5) Definicion de procesos locales
+begin                            		
+	# Cuerpo del proceso bakground
+end;
 End module_name;
-\end{lstlisting}
+\end{lstlisting}	
+\end{minipage}
 
 Los procesos background tienen acceso a las variables y pueden invocar procedimientos del mismo módulo. A su vez, como sucede en monitores, pueden invocar procedimientos definidos en otros módulos. Siempre y cuando, estos últimos, sean exportados por dicho módulo.
 
 La ejecución de una llama intermódulo, difiere con respecto a una local.
 
 \begin{itemize}
-    \item Un nuevo proceso atiende la llamada y los argumentos son pasados como mensajes entre el llamador y el proceso servidor.
-    \item El proceso llamador que demorado mientras se ejecuta el cuerpo del procedimiento invocado.
-    \item Cuando el proceso servidor finaliza su ejecución del procedimiento invocado, retorna los resultados y finaliza.
-    \item El proceso llamador, continua su ejecución.
+	\item Un nuevo proceso atiende la llamada y los argumentos son pasados como mensajes entre el llamador y el proceso servidor.
+	\item El proceso llamador que demorado mientras se ejecuta el cuerpo del procedimiento invocado.
+	\item Cuando el proceso servidor finaliza su ejecución del procedimiento invocado, retorna los resultados y finaliza.
+	\item El proceso llamador, continua su ejecución.
 \end{itemize}
 
 \centerline{
-    \includegraphics[width=4in, height=1.5in]{assets/rpc_execution.png}
+	\includegraphics[width=4in, height=1.5in]{assets/rpc_execution.png}
 }
 
 \subsection{Sincronización}
 
 Con RPC, la \textbf{\emph{sincronización entre proceso llamador y servidor está implícita}}. No obstante, necesitamos mecanismos para que procesos server y background sincronicen dentro de un módulo. Existen 2 (dos) enfoques para proveer sincronización dentro de un módulo.
 
-
-\begin{multicols}{2}
-\centerline{\textbf{\emph{A lo sumo, un proceso activo}}}
-
-\centering
-Apropidado para entornos monoprocesador ya que, reduce el context switch.
-
-\begin{itemize}
-    \item Mutex $\rightarrow$ Implícito.
-    \item Condición $\rightarrow$ Explícito (semáforos o monitores).
-\end{itemize}
-
-\columnbreak
-\centerline{\textbf{\emph{Ejecución concurrente}}}
-
-Apropidado, de forma natural, para entornos multriprocesador.
-
-\begin{itemize}
-    \item Mutex $\rightarrow$ Explícito (semáforos o monitores).
-    \item Condición $\rightarrow$ Explícito (semáforos o monitores).
-\end{itemize}
-
-\end{multicols}
+\noindent
+\begin{minipage}{0.5\textwidth}
+\textbf{\emph{A lo sumo, un proceso activo}}
+\\
+Apropidado para entornos monoprocesador \\ya que, reduce el context switch.
+\\
+Mutex $\rightarrow$ Implícito.
+\\
+Condición $\rightarrow$ Explícito (semáforos/monitores).
+\end{minipage}
+\noindent
+\begin{minipage}{0.5\textwidth}
+\textbf{\emph{Ejecución concurrente}}
+\\
+Apropidado, de forma natural, para entornos \\ multriprocesador.
+\\
+Mutex $\rightarrow$ Explícito (semáforos/monitores).
+\\
+Condición $\rightarrow$ Explícito (semáforos/monitores).
+\end{minipage}
 
 \subsection{Time Server}
 
@@ -436,27 +437,27 @@ Sem m = 1;                      # Semaforo para garantizar mutex, en el acceso a
 Sem d = ([n] 0);                # Arreglo de semaforos para demorar procesos.
 
 proc get_time(): int            # Retorna el tiempo actual del servidor en ms.
-    return time;
+	return time;
 end;
 
 proc delay(int interval)        # Demora un proceso tantos ms, como interval lo indique.
-    P(m);
-    waketime = time + interval;
-    delayed.push(waketime, id);
-    V(m);
-    P(d[id]);
+	P(m);
+	waketime = time + interval;
+	delayed.push(waketime, id);
+	V(m);
+	P(d[id]);
 end;
 
 process Clock                   # Proceso background. Mantiene actualizada la variable time
-    while (true)                # y despierta procesos demorados por la operacion delay.
-        time++;                 
-        P(m);
-        while (time >= menor waketime en delayed)
-            delayed.pop(waketime, id);
-            V(d[id]);
-        end;
-        V(m);
-    end;
+	while (true)                # y despierta procesos demorados por la operacion delay.
+		time++;                 
+		P(m);
+		while (time >= menor waketime en delayed)
+			delayed.pop(waketime, id);
+			V(d[id]);
+		end;
+		V(m);
+	end;
 end;
 End.
 \end{lstlisting}
@@ -470,7 +471,7 @@ La cabecera de un módulo, debe especificar las operaciones exportadas. Mientras
 Dicho proceso, esperara por una call y actuar. Las llamadas, a operaciones, serán atendidas de a una por vez aunque los procesos se ejecuten concurrentemente. Esto \textbf{\emph{provee sincronización dentro del módulo}}.
 
 \centerline{
-    \includegraphics[width=4in, height=1.5in]{assets/rendezvous_execution.png}
+	\includegraphics[width=4in, height=1.5in]{assets/rendezvous_execution.png}
 }
 
 \subsection{Sentencias Input}
@@ -507,19 +508,19 @@ op retirar(int);
 
 Body
 Process Buffer
-    Queue buffer;
-    int cant = 0;
-    int cantMax = n;
+	Queue buffer;
+	int cant = 0;
+	int cantMax = n;
 
-    while(true)
-        in depositar(x) and (cant < cantMax) ->
-            buffer.push(x);
-            cant++;
-        [] retirar(x) and (cat > 0) ->
-            buffer.pop(x);
-            cant--
-        ni
-    end;
+	while(true)
+		in depositar(x) and (cant < cantMax) ->
+			buffer.push(x);
+			cant++;
+		[] retirar(x) and (cat > 0) ->
+			buffer.pop(x);
+			cant--
+		ni
+	end;
 end;
 End.
 \end{lstlisting}
@@ -534,13 +535,13 @@ Las tareas (\textbf{\emph{tasks}}), son procesos independientes que cuentan con 
 Procedure nombreProceso
 
 Task nombreTarea Is
-    # Declaracion de entries
+	# Declaracion de entries
 end;
 
 Task Body nombreTarea Is
-    # Declaracion de locales e inicializacion
+	# Declaracion de locales e inicializacion
 Begin
-    # Sentencias ...
+	# Sentencias ...
 end;
 
 End nombreProceso;
@@ -550,15 +551,15 @@ Un programa en ADA, atiende solicitudes a procedimientos mediante la sentencia \
 
 \begin{lstlisting}
 Accept E (formals) do
-    # Sentencias
+	# Sentencias
 end;
 \end{lstlisting}
 
 De ser necesario, comunicación guardada con un comportamiento no determinístico. ADA ofrece la sentencia \lstinline{select}. No obstante, \lstinline{select} resulta menos poderosa que la notación formal establecida en rendezvous; por 2 (dos) motivos.
 
 \begin{enumerate}
-    \item No soporta expresiones de scheduling.
-    \item La expresión de sincronización, no puede referenciar a los parámetros formales de la operación.
+	\item No soporta expresiones de scheduling.
+	\item La expresión de sincronización, no puede referenciar a los parámetros formales de la operación.
 \end{enumerate}
 
 \subsection{Buffer limitado con ADA}
@@ -567,25 +568,25 @@ De ser necesario, comunicación guardada con un comportamiento no determinístic
 Procedure nombreProceso
 
 Task Mailbox Is
-    Entry Depositar (msg: IN string)
-    Entry Retirar (msg: OUT string)
+	Entry Depositar (msg: IN string)
+	Entry Retirar (msg: OUT string)
 End;
-    
+	
 Task Body Mailbox Is
-    Array datos[n];
-    Int count, first, last = 0;
+	Array datos[n];
+	Int count, first, last = 0;
 Begin
-    Loop
-        Select
-            When (count < n) -> Accept Depositar (msg: IN string)
-                # Sentencias de la operacion Depositar
-            End Depositar;
-            Or
-            When (count > 0) -> Accept Retirar (msg: OUT string)
-                # Sentencias de la operacion Retirar
-            End Retirar;
-        End;
-    End;
+	Loop
+		Select
+			When (count < n) -> Accept Depositar (msg: IN string)
+				# Sentencias de la operacion Depositar
+			End Depositar;
+			Or
+			When (count > 0) -> Accept Retirar (msg: OUT string)
+				# Sentencias de la operacion Retirar
+			End Retirar;
+		End;
+	End;
 End;
 End nombreProceso;
 \end{lstlisting}
@@ -600,15 +601,15 @@ Una operación puede ser invocada por call (sincrónico) o por send (asincrónic
 
 {\renewcommand{\arraystretch}{2}%\
 \begin{center}
-    \begin{tabular}{c c c}
-    \textbf{Invocación} &  \textbf{Servicio} & \textbf{Efecto} \\
-    call & proc & Llamado a procedimiento. \\
-    \hline
-    call & in & Rendezvous. \\
-    \hline
-    send & proc & Creación dinámica de un proceso. \\
-    \hline
-    send & in & PMA. \\
+	\begin{tabular}{c c c}
+	\textbf{Invocación} &  \textbf{Servicio} & \textbf{Efecto} \\
+	call & proc & Llamado a procedimiento. \\
+	\hline
+	call & in & Rendezvous. \\
+	\hline
+	send & proc & Creación dinámica de un proceso. \\
+	\hline
+	send & in & PMA. \\
 \end{tabular}
 \end{center}}
 
@@ -654,17 +655,17 @@ La fuente de entrada y salida, del pipeline, no está especificada.
 
 \columnbreak
 \begin{tikzpicture}
-    \node[circle,draw=none, minimum size=0.5cm] (in) at (0,0) {};
-    \node[circle,draw, minimum size=0.5cm] (worker0) at (1.2,0) {$w_0$};
-    \node[circle,draw, minimum size=0.5cm] (worker1) at (2.4,0) {$w_1$};
-    \node[circle,draw=none, minimum size=0.5cm] (workerX) at (3.6,0) {...};
-    \node[circle,draw, minimum size=0.5cm] (workerN) at (4.8,0) {$w_n$};
-    \node[circle,draw=none, minimum size=0.5cm] (out) at (6,0) {};
-    \draw[thick] (in) edge[post] (worker0);
-    \draw[thick] (worker0) edge[post] (worker1);
-    \draw[thick] (worker1) edge[post] (workerX);
-    \draw[thick] (workerX) edge[post] (workerN);
-    \draw[thick] (workerN) edge[post] (out);
+	\node[circle,draw=none, minimum size=0.5cm] (in) at (0,0) {};
+	\node[circle,draw, minimum size=0.5cm] (worker0) at (1.2,0) {$w_0$};
+	\node[circle,draw, minimum size=0.5cm] (worker1) at (2.4,0) {$w_1$};
+	\node[circle,draw=none, minimum size=0.5cm] (workerX) at (3.6,0) {...};
+	\node[circle,draw, minimum size=0.5cm] (workerN) at (4.8,0) {$w_n$};
+	\node[circle,draw=none, minimum size=0.5cm] (out) at (6,0) {};
+	\draw[thick] (in) edge[post] (worker0);
+	\draw[thick] (worker0) edge[post] (worker1);
+	\draw[thick] (worker1) edge[post] (workerX);
+	\draw[thick] (workerX) edge[post] (workerN);
+	\draw[thick] (workerN) edge[post] (out);
 \end{tikzpicture}
 \end{multicols}
 
@@ -676,40 +677,40 @@ Pipeline abierto conectado por un coordinador. El coordinador, produce los datos
 
 \columnbreak
 \begin{tikzpicture}
-    \node[circle,draw=none, minimum size=0.5cm] (in) at (0,0) {};
-    \node[circle,draw, minimum size=0.5cm] (worker0) at (1.2,0) {$w_0$};
-    \node[circle,draw, minimum size=0.5cm] (worker1) at (2.4,0) {$w_1$};
-    \node[circle,draw=none, minimum size=0.5cm] (workerX) at (3.6,0) {...};
-    \node[circle,draw, minimum size=0.5cm] (workerN) at (4.8,0) {$w_n$};
-    \node[ellipse,draw, minimum size=1cm] (coordinator) at (3,-1.2) {$cordinator$};
+	\node[circle,draw=none, minimum size=0.5cm] (in) at (0,0) {};
+	\node[circle,draw, minimum size=0.5cm] (worker0) at (1.2,0) {$w_0$};
+	\node[circle,draw, minimum size=0.5cm] (worker1) at (2.4,0) {$w_1$};
+	\node[circle,draw=none, minimum size=0.5cm] (workerX) at (3.6,0) {...};
+	\node[circle,draw, minimum size=0.5cm] (workerN) at (4.8,0) {$w_n$};
+	\node[ellipse,draw, minimum size=1cm] (coordinator) at (3,-1.2) {$cordinator$};
 
-    \draw[thick] (coordinator) edge[post, bend left=30] (worker0);
-    \draw[thick] (worker0) edge[post] (worker1);
-    \draw[thick] (worker1) edge[post] (workerX);
-    \draw[thick] (workerX) edge[post] (workerN);
-    \draw[thick] (workerN) edge[post, bend left=30] (coordinator);
+	\draw[thick] (coordinator) edge[post, bend left=30] (worker0);
+	\draw[thick] (worker0) edge[post] (worker1);
+	\draw[thick] (worker1) edge[post] (workerX);
+	\draw[thick] (workerX) edge[post] (workerN);
+	\draw[thick] (workerN) edge[post, bend left=30] (coordinator);
 \end{tikzpicture}
 \end{multicols}
 
 \begin{multicols}{2}
 
-    \textbf{Pipeline Circular}
-    
-    La salida de $w_n$ está conectada a la entrada de $w_0$. Útil cuando la solución, no puede obtenerse en una sola pasada.
-    
-    \columnbreak
-    \begin{tikzpicture}
-        \node[circle,draw=none, minimum size=0.5cm] (in) at (0,0) {};
-        \node[circle,draw, minimum size=0.5cm] (worker0) at (1.2,0) {$w_0$};
-        \node[circle,draw, minimum size=0.5cm] (worker1) at (2.4,0) {$w_1$};
-        \node[circle,draw=none, minimum size=0.5cm] (workerX) at (3.6,0) {...};
-        \node[circle,draw, minimum size=0.5cm] (workerN) at (4.8,0) {$w_n$};
-    
-        \draw[thick] (worker0) edge[post] (worker1);
-        \draw[thick] (worker1) edge[post] (workerX);
-        \draw[thick] (workerX) edge[post] (workerN);
-        \draw[thick] (workerN) edge[post, bend left=60] (worker0);
-    \end{tikzpicture}
+	\textbf{Pipeline Circular}
+	
+	La salida de $w_n$ está conectada a la entrada de $w_0$. Útil cuando la solución, no puede obtenerse en una sola pasada.
+	
+	\columnbreak
+	\begin{tikzpicture}
+		\node[circle,draw=none, minimum size=0.5cm] (in) at (0,0) {};
+		\node[circle,draw, minimum size=0.5cm] (worker0) at (1.2,0) {$w_0$};
+		\node[circle,draw, minimum size=0.5cm] (worker1) at (2.4,0) {$w_1$};
+		\node[circle,draw=none, minimum size=0.5cm] (workerX) at (3.6,0) {...};
+		\node[circle,draw, minimum size=0.5cm] (workerN) at (4.8,0) {$w_n$};
+	
+		\draw[thick] (worker0) edge[post] (worker1);
+		\draw[thick] (worker1) edge[post] (workerX);
+		\draw[thick] (workerX) edge[post] (workerN);
+		\draw[thick] (workerN) edge[post, bend left=60] (worker0);
+	\end{tikzpicture}
 \end{multicols}
 
 \section{Probes and echoes}
@@ -753,22 +754,22 @@ Chan grant[n];
 
 Process Worker[i=1..n]
 while(true)
-    send entryRequest[i]();
-    receive grant[i]();
-    # Seccion Critica ...
-    send exitRequest[i];
+	send entryRequest[i]();
+	receive grant[i]();
+	# Seccion Critica ...
+	send exitRequest[i];
 end;
 end;
 
 Process Helper[i=1..n]
 while(true)
-    receive token[i]();
-    if (!empty(entryRequest[i]))
-        receive entryRequest[i]();
-        send grant[i]();
-        receive exitRequest[i]();
-    end;
-    send token[(i mod n) + 1]();
+	receive token[i]();
+	if (!empty(entryRequest[i]))
+		receive entryRequest[i]();
+		send grant[i]();
+		receive exitRequest[i]();
+	end;
+	send token[(i mod n) + 1]();
 end;
 end;
 \end{lstlisting}
