@@ -405,6 +405,36 @@ Process Worker[1..n]
 End.
 \end{lstlisting}
 
+\begin{tikzpicture}
+\node[] (label_w) at (0,0) {Workers};
+\node[] (label_w1) at (2,0) {1};
+\node[] (label_w2) at (3,0) {2};
+\node[] (label_w3) at (4,0) {3};
+\node[] (label_w4) at (5,0) {4};
+\node[] (label_w5) at (6,0) {5};
+\node[] (label_w6) at (7,0) {6};
+\node[] (label_w7) at (8,0) {7};
+\node[] (label_w8) at (9,0) {8};
+\node[] (label_s1) at (0,-1) {Stage 1};
+\node[] (label_s2) at (0,-2) {Stage 2};
+\node[] (label_s3) at (0,-3) {Stage 3};
+% Stage 1 barriers
+\draw [line width = 0.5pt] (2,-1) -- (3,-1); % 1 con 2
+\draw [line width = 0.5pt] (4,-1) -- (5,-1); % 3 con 4
+\draw [line width = 0.5pt] (6,-1) -- (7,-1); % 5 con 6
+\draw [line width = 0.5pt] (8,-1) -- (9,-1); % 7 con 8
+% Stage 2 barriers
+\draw [line width = 0.5pt] (2,-2) -- (4,-2); % 1 con 3
+\draw [line width = 0.5pt] (3,-2.1) -- (5,-2.1); % 2 con 4
+\draw [line width = 0.5pt] (6,-2) -- (8,-2); % 5 con 7
+\draw [line width = 0.5pt] (7,-2.1) -- (9,-2.1); % 6 con 8
+% Stage 3 barriers
+\draw [line width = 0.5pt] (2,-3) -- (6,-3); % 1 con 5
+\draw [line width = 0.5pt] (3,-3.1) -- (7,-3.1); % 2 con 6
+\draw [line width = 0.5pt] (4,-3.2) -- (8,-3.2); % 3 con 7
+\draw [line width = 0.5pt] (5,-3.3) -- (9,-3.3); % 4 con 8
+\end{tikzpicture}
+
 Si \emph{n} no fuese potencia de 2, podría utilizarse el siguiente \emph{n} potencia de 2. Generando workers substitutos para cada iteración. Este workaround, decrementa la eficiencia del algoritmo.
 
 \section{Defectos}
