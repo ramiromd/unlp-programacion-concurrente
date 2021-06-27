@@ -3,37 +3,260 @@
 \usepackage{enumitem}
 
 \newenvironment{main_question}
-    {\begin{enumerate}[resume=series-name]\bfseries}
-    {\end{enumerate}}
+	{\noindent\begin{enumerate}[resume=series-name]\bfseries}
+	{\end{enumerate}}
 
 \newenvironment{sub_questions}
-    {\begin{enumerate}[label=\emph{\alph*}), leftmargin=0cm]}
-    {\end{enumerate}}
+	{\noindent\begin{enumerate}[label=\emph{\alph*}), leftmargin=0cm]}
+	{\end{enumerate}}
+
+\newenvironment{answer}
+	{\noindent\par\normalfont}
+	{}
 
 \begin{document}
-    
+	
 % Carátula
 \title{
-    \faIcon[regular]{gem}\\
-    Programación Concurrente\\
-    \large Cuestionario
+	\faIcon[regular]{gem}\\
+	Programación Concurrente\\
+	\large Cuestionario
 }
 
 \author{Ramiro Martínez D'Elía}
 \date{2021}
 \maketitle
 
+%---------------------------------------------------------------------------
 \begin{main_question}
-\item Hola.
+\item Defina programa concurrente, programa paralelo y programa distribuido.
+\end{main_question}
+\begin{answer}
+Apunte I: sección 1.1, Apunte II: sección 1.1 y Apunte IV: 1.1
+\end{answer}
+%---------------------------------------------------------------------------
+\begin{main_question}
+\item Responda
 \begin{sub_questions}
-\item jaja
-\item almacenamiento
-\item cddd
+	\item ¿A qué se denomina propiedad del programa? ¿Qué son las propiedades de seguridad y vida? Ejemplificar.
+	\item Defina fairness. Relacionar dicho concepto con las políticas de scheduling.
+	\item Describa los distintos tipos de fairness
+	\item ¿Cuáles son las propiedades que debe cumplir un protocolo de E/S a una sección crítica?
+	\item Cuáles son los defectos que presenta la sincronización por busy waiting? Diferencie esta situación respecto de los semáforos.
+	\item Explique la semántica de la instrucción de grano grueso  AWAIT y su relación con las instrucciones Test \& Set o Fetch \& Add.
 \end{sub_questions}
 \end{main_question}
+\begin{answer}
+a) Apunte I: sección 1.7
 
+b) Apunte I: sección 1.8
+
+c) Apunte I: sección 1.8
+
+d) Apunte II: sección 1.2
+
+e) Apunte II: sección 2.3
+
+f) Apunte I: sección 1.6
+\end{answer}
+%---------------------------------------------------------------------------
 \begin{main_question}
-\item Hola.    
+\item Definir el problema general de alocación de recursos y su resolución mediante una política SJN. ¿Minimiza el tiempo promedio de espera? ¿Es fair? Si no lo es, plantee una alternativa que lo sea.
 \end{main_question}
+\begin{answer}
+Apunte II: sección 3.5.2
+\end{answer}
+%---------------------------------------------------------------------------
+\begin{main_question}
+\item ¿En qué consiste la técnica de passing the baton? Aplicar este concepto a la resolución del problema de lectores y escritores.
+\end{main_question}
+\begin{answer}
+Apunte II: secciones 3.5 y 3.5.1
+\end{answer}
+%---------------------------------------------------------------------------
+\begin{main_question}
+\item Explique el concepto de broadcast y sus dificultades de implementación en un ambiente distribuido, con pasaje de mensajes sincrónico y asincrónico.
+\end{main_question}
+\begin{answer}
+\emph{Sobre primitiva broadcast: Apunte III sección 2.1.4}
+
+En un ambiente con memoria compartida, este tipo de primitivas es más sencilla de implementar. 
+
+En ambientes distribuidos, al no haber variables compartidas, se debe utilizar pasaje de mensajes. Esto, supone ciertas dificultades para cada caso.
+
+Con pasaje de mensajes asincrónicos (PMA), podemos plantear los siguientes escenarios de implementación:
+
+\underline{Utilizar un único canal}
+
+El emisor deberá enviar tantos mensajes, como receptores existan. Este escenario evita demoras innecesarias, en el envío de mensajes, ya que \lstinline{send} no es bloqueante.
+
+\underline{Un canal por proceso}
+
+El emisor deberá enviar el mensaje por tantos canales, como receptores existan. Con este escenario, tenemos demoras innecesarias: un proceso listo debe esperar a que el emisor itere sobre su canal. 
+
+Con pasaje de mensajes sincrínicos (PMS), los canales son punto a punto. Por este motivo, solo podemos llevar a cabo la implementación ``un canal por proceso'' planteada en PMA. Aunque, en este caso, resulte aún más ineficiente ya que \lstinline{send} causa demora.
+\end{answer}
+%---------------------------------------------------------------------------
+\begin{main_question}
+\item Responder sobre exclusión mutua selectiva
+\begin{sub_questions}
+	\item ¿Por qué el problema de los filósofos es de exclusión mutua selectiva? Si en lugar de 5 filósofos fueran 3, ¿el problema seguiría siendo de exclusión mutua selectiva? ¿Por qué?
+	\item El problema de los filósofos resuelto de forma centralizada y sin posiciones fijas ¿es de exclusión mutua selectiva? ¿Por qué?
+	\item El problema de los lectores-escritores es de exclusión mutua selectiva? ¿Porque?
+	\item Si en el problema de los lectores-escritores se acepta sólo 1 escritor  o 1 lector en la BD, ¿tenemos un problema de exclusión mutua selectiva?  ¿Por qué?
+\end{sub_questions}
+\end{main_question}
+\begin{answer}
+a) Apunte II: sección 3.4.1
+
+b) Apunte II: sección 3.4.1
+
+c) Apunte II: sección 3.4.2
+
+d) Apunte II: sección 3.4.2
+\end{answer}
+%---------------------------------------------------------------------------
+\begin{main_question}
+\item Sea el problema en el cual N procesos poseen inicialmente cada uno un valor V, y el objetivo es que todos conozcan cual es el máximo y cuál es el mínimo de todos los valores.
+\begin{sub_questions}
+	\item Plantee conceptualmente posibles soluciones con las siguientes arquitecturas de red: Centralizada, simétrica y anillo circular. No implementar.
+	\item Analice las soluciones anteriores desde el punto de vista del número de mensajes y la performance global del sistema.
+\end{sub_questions}
+\end{main_question}
+\begin{answer}
+a) Apunte III: sección 2.1
+
+b) Apunte III: sección 2.1.4
+\end{answer}
+%---------------------------------------------------------------------------
+\begin{main_question}
+\item Defina el concepto de granularidad. ¿Qué relación existe entre la granularidad de programas y de procesadores?
+\end{main_question}
+\begin{answer}
+Apunte IV: sección 1.6
+\end{answer}
+%---------------------------------------------------------------------------
+\begin{main_question}
+\item ¿En qué consiste la comunicación guardada (introducida por CSP) y cuál es su utilidad?
+\end{main_question}
+\begin{answer}
+Apunte III: sección 3.1
+\end{answer}
+%---------------------------------------------------------------------------
+\begin{main_question}
+\item ¿Cuál es la utilidad de la técnica de passing the baton? ¿Qué relación encuentra con la técnica de 
+passing the condition?
+\end{main_question}
+\begin{answer}
+Apunte II: sección 3.5
+\end{answer}
+%---------------------------------------------------------------------------
+\begin{main_question}
+\item Explique sintéticamente los 7 paradigmas de interacción entre procesos en programación distribuida. Ejemplifique.
+\end{main_question}
+\begin{answer}
+Apunte III: capítulo 5
+\end{answer}
+%---------------------------------------------------------------------------
+\begin{main_question}
+\item Responder sobre programación paralela
+\begin{sub_questions}
+	\item ¿Cuál es el objetivo de la programación paralela?
+	\item Defina las métricas de speedup y eficiencia. ¿Cuál es el significado de cada una de ellas (que miden)? 
+	¿Cuál es el rango de valores para cada una?
+	\item ¿En qué consiste la ley de Amdahl?
+\end{sub_questions}
+\end{main_question}
+\begin{answer}
+a) Apunte IV: sección 1.1
+
+b) Apunte IV: sección 1.2 y sección 1.3
+
+c) Apunte IV: sección 1.5
+\end{answer}
+%---------------------------------------------------------------------------
+\begin{main_question}
+\item Suponga que el tiempo de ejecución de un algoritmo secuencial es de 1000 unidades de tiempo, de las cuales 
+el 80\% corresponden a código paralelizable. ¿Cuál es el límite en la mejora que puede obtenerse  paralelizando el 
+algoritmo?
+\end{main_question}
+\begin{answer}
+Apunte IV: sección 1.5 (Ley de Amdahl) está resuelto un ejercicio similar.
+\end{answer}
+%---------------------------------------------------------------------------
+\begin{main_question}
+\item ¿Qué significa el problema de interferencia en un programa concurrente? ¿Cómo puede evitarse? 
+\end{main_question}
+\begin{answer}
+Apunte I: sección 1.4
+\end{answer}
+
+%---------------------------------------------------------------------------
+\begin{main_question}
+\item uponga que la solución a un problema es paralelizada sobre p procesadores de dos maneras diferentes.
+En un caso, el speedup (S) está regido por la función S=p-1 y en el otro por la función S=p/2. ¿Cuál de las
+dos soluciones se comportará más eficientemente al crecer la cantidad de procesadores? Justifique
+claramente. 
+\end{main_question}
+\begin{answer}
+Apunte I: sección 1.4 (Escalabilidad). Hay un ejercicio similar resuelto.
+\end{answer}
+%---------------------------------------------------------------------------
+\begin{main_question}
+\item Sea el problema de alocacion Shortest Job Next
+\begin{sub_questions}
+	\item ¿Funciona correctamente con disciplina de señalización Signal and continue? Justifique.
+	\item ¿Funciona correctamente con disciplina de señalización signal and wait? Justifique.
+\end{sub_questions}
+\end{main_question}
+\begin{answer}
+a) Con esta disciplina, todo proceso señalizado es enviado a una cola de listos; donde competirá contra el resto por el acceso al recurso. En cuyo caso, podría perder contra otro proceso y la meta de SJN no se estaría concretando.
+	
+b) Con esta disciplina, todo proceso señalizado retoma su ejecución de inmediato. Por tal motivo, esta disciplina es la más adecudada para la implementación.
+
+\emph{Nota$_1$: El enunaciado incluye el mismo algoritmo que el del apunte de monitores.}
+
+\emph{Nota$_2$: Para el LJN (Lowest Job Next) aplican las mismas respuestas.}
+\end{answer}
+%---------------------------------------
+\begin{main_question}
+\item En los protocolos de acceso a sección crítica vistos en clase, cada proceso ejecuta el mismo algoritmo. 
+Una manera alternativa de resolver el problema es usando un proceso coordinador. En este caso, cuando cada
+proceso SC[i] quiere entrar a su sección crítica le avisa al coordinador, y espera a que éste le de permiso. Al
+terminar de ejecutar su sección crítica, el proceso SC[i] le avisa al coordinador.
+Desarrolle protocolos para los procesos SC[i] y el coordinador usando sólo variables compartidas (no
+tenga en cuenta la propiedad de eventual entrada).
+\end{main_question}
+\begin{answer}
+\begin{lstlisting}
+int request[n] = ([n] 0);
+int grant[n] = ([n] 0);
+\end{lstlisting}
+\begin{lstlisting}[multicols=2, firstnumber=3]
+Process Worker[i = 1..n]
+	
+# Seccion no critica ...
+
+request[i] = 1;
+while(grant[i] == 0) skip;
+# Seccion Critica
+grant[i] = 0;
+
+# Seccion no critica ...
+end;
+
+Process Coordinator
+while (true)
+	for (j = 1; j < n; j++)
+		if (request[j] == 1)
+			request[j] = 0;
+			grant[j] = 1;
+			while (grant[j] == 1) skip;
+		end;
+	end;
+end;
+end;
+\end{lstlisting}
+\end{answer}
 
 \end{document}
