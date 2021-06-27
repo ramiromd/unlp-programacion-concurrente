@@ -1,0 +1,39 @@
+\documentclass[a4paper, 10pt]{article}
+\usepackage{common}
+\usepackage{enumitem}
+
+\newenvironment{main_question}
+    {\begin{enumerate}[resume=series-name]\bfseries}
+    {\end{enumerate}}
+
+\newenvironment{sub_questions}
+    {\begin{enumerate}[label=\emph{\alph*}), leftmargin=0cm]}
+    {\end{enumerate}}
+
+\begin{document}
+    
+% Carátula
+\title{
+    \faIcon[regular]{gem}\\
+    Programación Concurrente\\
+    \large Cuestionario
+}
+
+\author{Ramiro Martínez D'Elía}
+\date{2021}
+\maketitle
+
+\begin{main_question}
+\item Hola.
+\begin{sub_questions}
+\item jaja
+\item almacenamiento
+\item cddd
+\end{sub_questions}
+\end{main_question}
+
+\begin{main_question}
+\item Hola.    
+\end{main_question}
+
+\end{document}
