@@ -78,19 +78,22 @@
 \begin{answered}
 \emph{Sobre primitiva broadcast $\rightarrow$ Apunte III: sección 2.1.4}
 
-En un ambiente con memoria compartida, este tipo de primitivas es más sencilla de implementar. 
+En un ambiente con memoria compartida, este tipo de primitivas es más sencilla de implementar.
 
-En ambientes distribuidos, al no haber variables compartidas, se debe utilizar Pasaje de Mensajes. Esto, supone ciertas dificultades para cada caso.
+En ambientes distribuidos, al no haber variables compartidas, se debe utilizar pasaje de mensajes. Esto, supone ciertas dificultades para cada caso.
 
-Con PMA:
-\begin{itemize}
-    \item Utilizar un único canal. El emisor deberá enviar tantos mensajes, como receptores existan. $\rightarrow$ Evita demoras inecesarias.
-    \item Un canal por proceso. El emisor deberá enviar el mensaje por tantos canales, como receptores existan. $\rightarrow$ Causa demoras innesecarias: un proceso listo debe esperar a que el emisor itere sobre su canal. 
-\end{itemize}
+Con pasaje de mensajes asincrónicos (PMA), podemos plantear los siguientes escenarios de implementación:
 
-Con PMS:
+\underline{Utilizar un único canal}
 
-Los canales son punto a punto. Por este motivo, solo podemos llevar a cabo la implementación PMA(2). Aunque, en este caso, resulte aún más ineficiente ya que \lstinline{send} causa demora.
+El emisor deberá enviar tantos mensajes, como receptores existan. Este escenario evita demoras innecesarias, en el envío de mensajes, ya que \lstinline{send} no es bloqueante.
+
+\underline{Un canal por proceso}
+
+El  emisor  deberá  enviar  el  mensaje  por  tantos  canales,  como  receptores  existan.  Con  este  escenario, tenemos demoras innecesarias: un proceso listo debe esperar a que el emisor itere sobre su canal.
+
+Con pasaje de mensajes sincrónicos (PMS), los canales son punto a punto. Por este motivo, solo podemos llevar a cabo la implementación ``un canal por proceso'' planteada en PMA. Aunque, en este caso, resulte aún más ineficiente ya que \lstinline{send} demora.
+
 \end{answered}
 
 %====================================================================================================
@@ -800,5 +803,9 @@ claramente.
 \begin{answered}
     \emph{Apunte IV: sección 1.4 (Escalabilidad)}
 \end{answered}
+
+%=====================================================================
+
+\item Analice que tipos de mecanismos de pasaje de mensajes son más adecuados para resolver problemas del tipo Cliente-Servidor, Pares que interactúan, filtro y productores- consumidores. Justificar.
 \end{QandA}
 \end{document}
