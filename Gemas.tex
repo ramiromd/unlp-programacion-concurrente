@@ -807,5 +807,19 @@ claramente.
 %=====================================================================
 
 \item Analice que tipos de mecanismos de pasaje de mensajes son más adecuados para resolver problemas del tipo Cliente-Servidor, Pares que interactúan, filtro y productores- consumidores. Justificar.
+
+\begin{answered}
+En los problemas del tipo \textbf{pares que interactúan, filtros y productores/consumidores}; el esquema de \textbf{comunicación entre procesos}, por lo general, es \textbf{unidireccional}. Un proceso, envía un mensaje a otro y no requiere una respuesta, del receptor de dicho mensaje, para continuar con su trabajo.
+
+Dado este escenario, descripto en el párrafo anterior, la opción más adecuada es la de utilizar \textbf{pasaje de mensajes asincrónico}. Ya que su primitiva \lstinline{send} no es bloqueante para el emisor; permitiendole despachar su mensaje y continúar con su trabajo.
+
+En los problemas del tipo \textbf{cliente/servidor}; el esquema de \textbf{comunicación entre procesos} es \textbf{bidireccional}. Un proceso, cliente, envía una solicitud a un proceso servidor; y espera por la respuesta correspondiente.
+
+Dado este escenario, descripto en el párrafo anterior, la opción más adecuada es la de utilizar \textbf{pasaje de mensajes sincrónico}. Ya que su primitiva \lstinline{send} es bloqueante para el emisor; impidiendo que continue con su ejecución hasta obtener la respuesta correspondiente.
+
+Además, en los problemas del tipo \textbf{cliente/servidor}, tenemos que tener en cuenta la \textbf{cantidad de canales a definir}. Esto supone un problema ya que; necesitamos al menos un canal para que el servidor reciba solicitudes y tantos canales, de respuesta, como procesos clientes tengamos. 
+
+Existen técnicas que resuelven esta problematica, sobre la cantidad de canales a definir. Una de ellas es \textbf{Rendezvous} y otra \textbf{Remote Procedure Call (RPC)}.
+\end{answered}
 \end{QandA}
 \end{document}
