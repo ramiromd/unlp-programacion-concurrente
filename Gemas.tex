@@ -329,25 +329,35 @@ End.
 \end{answered}
 \item ¿Cuántos mensajes se intercambian en (c) en el mejor caso? ¿Y en el peor de los casos?
 \begin{answered}
-    \textbf{Peor caso} $\rightarrow$ la lista está ordenada de forma descendente (mayor a menor). En cuyo caso, los procesos deben intercambiar todos sus valores (en cada ronda). Por ejemplo, con $n=8$ y $k=4$:
-    \\
-    $\#MensajesRondasImpares = \#NumsPorProceso * \#ProcesosActivos * \#Rondas$
-    \\
-    $\#MensajesRondasImpares = n/k * k * k/2 = 8/4 * 4 * 4/2 = 2 * 4 * 2 = 16$ 
-    \\
-    $\#MensajesRondasPares = \#NumsPorProceso * \#ProcesosActivos - 2 * \#Rondas$
-    \\
-    $\#MensajesRondasPares = n/k * k-2 * k/2 = 8/4 * 4-2 * 4/2 = 2 * 2 * 2 = 8$ 
-    \\
-    $\#Mensajes = \#MensajesRondasPares + \#MensajesRondasImpares = 8 + 16 = 24$
-    \\
-    \textbf{Mejor caso} $\rightarrow$ la lista está ordenada de forma ascendente (menor a mayor). Seguimos la misma lógica, del caso anterior, pero entendiendo que cada proceso solo intercambia 1 único valor por ronda. Por ejemplo, con $n=8$ y $k=4$:
-    \\
-    $\#MensajesRondasImpares = 1 * k * k/2 = 1 * 4 * 4/2 = 1 * 4 * 2 = 8$
-    \\
-    $\#MensajesRondasPares = 1 * k-2 * k/2 = 1 * 4-2 * 4/2 = 1 * 2 * 2 = 4$
-    \\
-    $\#Mensajes = \#MensajesRondasPares + \#MensajesRondasImpares = 8 + 4 = 12$
+Nota: todas las cuentas, son contando a los procesos inactivos de las rondas pares. Es por eso que, decimos \emph{de forma general}.
+
+\underline{Peor caso}
+
+En el peor caso, la lista se encuentra ordenada de forma descendiente. Lo que implica que, cada proceso deba intercambiar todos sus valores.
+
+De forma general, cada proceso intercambia $\frac{n}{k+1}$ valores por ronda. El $+1$ puede verse como un proceso fantasma, para que ningun proceso quede inactivo en las rondas pares. Existirán $k$ procesos ejecutandose en $k$ rondas, por lo que la cantidad de mensajes totales está dada por la siguiente forma:
+
+\begin{equation}
+    k * k * \frac{n}{k+1} = k^2 * \frac{n}{k+1}
+\end{equation}
+
+{\renewcommand{\arraystretch}{2}%\
+\begin{center}
+\begin{tabular}{c c c c}
+\textbf{n} & \textbf{k} &  \textbf{Forma general} & \textbf{Valor exacto} \\
+\hline
+8 & 4 & 25,6 & 24\\
+\hline
+12 & 4 & 38,4 & 36\\
+\hline
+12 & 6 & 61,2 &  60\\
+\end{tabular}
+\end{center}}  
+
+\underline{Mejor caso}
+
+En el mejor caso, la lista se encuentra ordenada de menor a mayor. Siguiendo la lógica anterior, cada proceso enviará a lo sumo 1 (un) mensaje. Dando un total de $k^2$ mensajes.
+
 \end{answered}
 
 \item ¿Cómo modificaría el algoritmo del punto (c) para que termine tan rápido como el arreglo este ordenado? ¿Esto agrega overhead de mensajes? De ser así, ¿Cuánto?
@@ -448,9 +458,11 @@ Con esta disciplina, todo proceso señalizado retoma su ejecución de inmediato.
 
 \item ¿Cuántos mensajes envía cada algoritmo para ordenar los valores? Justifique. NOTA: se pueden obviar en los cálculos los mensajes que se requieren para enviar los EOS.
 \begin{answered}
+Nota: Se asume el peor de los casos para las respuestas.
 \begin{itemize}
     \item Pipeline $\rightarrow$ Cada proceso envía 1 mensaje menos, del que recibió. De forma general, la cantidad total de mensajes puede verse como la siguiente sumatoria $\sum_{i=1}^n n-i$
     \item Sort Merged Network $\rightarrow$ Cada nivel del árbol envía $n$ mensajes, sabiendo que la altura del árbol es $log_2 n$ podemos afirmar que se enviarán $n * log_2 n$ mensajes.
+    \item Odd/Even Exchange Sort $\rightarrow$ El algoritmo requerirá de hasta $k^2 \frac{n}{k+1}$ mensajes.
 \end{itemize}
 \end{answered}
 \item ¿En cada caso, cuáles mensajes pueden ser enviados en paralelo (asumiendo que existe el hardware apropiado) y cuáles son enviados secuencialmente? Justifique.
@@ -462,6 +474,7 @@ Con esta disciplina, todo proceso señalizado retoma su ejecución de inmediato.
 \end{itemize}
 \end{answered}
 \item ¿Cuál es el tiempo total de ejecución de cada algoritmo? Asuma que cada operación de comparación o de envío de mensaje toma una unidad de tiempo. Justifique.
+Nota: Se asume el peor de los casos para las respuestas.
 \begin{answered}
 \begin{itemize}
 \item Pipeline $\rightarrow$ la lógica en este algoritmo es la de comparar, realizar una asignación si corresponde, y enviar un mensaje. Por lo tanto, cada proceso hara tantas comparaciones como envío de mensajes:
@@ -473,6 +486,12 @@ Con esta disciplina, todo proceso señalizado retoma su ejecución de inmediato.
 \\
 \begin{center}
     unidades de tiempo $\rightarrow 2 * (n * log_2 n)$
+\end{center}
+
+\item Odd/Even Exchange Sort $\rightarrow$ La lógica en este algoritmo, es similiar al pipeline (comparar, asignar y enviar). Por tal motivo, cada proceso hara tantas comparaciones como envío de mensajes:
+\\
+\begin{center}
+    unidades de tiempo $\rightarrow 2 * (k^2 * \frac{n}{k+1})$
 \end{center}
 \end{itemize}  
 \end{answered}
